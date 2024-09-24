@@ -180,8 +180,19 @@
                 <div class="card border-0">
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Customers with due  </h5>
+                          @php
+                        $count=0;
+                        foreach($user->loans as $use){ 
+                           if($use!=""){
+                             $totalAmount = $use->loan_required_amount;
+                             $paidAmount = $use->payments->sum('paid_amount');
+                             $diff=$totalAmount-$paidAmount;
+                             $count=$diff>0?$count+1:$count;
+                             }
+                            }
+                        @endphp
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($users->count($users->loan->loan_required_amount-$users->payments->paid_amount>0)) }} Tshs
+                            {{ $count }} people
                         </p>
                     </div>
                 </div>
@@ -190,8 +201,14 @@
                 <div class="card border-0">
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Fully paid customers</h5>
+                         @php
+                        $full=0;
+                        if($count!=$users->count()){
+                          $full=$users->count()-$count
+                        }
+                        @endphp
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($user->count($user->loans->loan_required_amount-$user->payments->paid_amount==0)) }} Tshs
+                            {{  $full }} people
                         </p>
                     </div>
                 </div>
