@@ -136,7 +136,7 @@
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Total Amount</h5>
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($loan->sum('loan_required_amount')) }} Tshs
+                            {{ number_format($$user->loans->sum('loan_required_amount')) }} Tshs
                         </p>
                     </div>
                 </div>
@@ -157,7 +157,7 @@
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Due Amount</h5>
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($$user->loans->sum('loan_required_amount')-$payments->sum('paid_amount')) }} Tshs
+                            {{ number_format($user->loans->sum('loan_required_amount')-$payments->sum('paid_amount')) }} Tshs
                         </p>
                     </div>
                 </div>
@@ -191,7 +191,7 @@
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Fully paid customers</h5>
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($user->count($user->loan?->loan_required_amount-$user->payments->paid_amount==0)) }} Tshs
+                            {{ number_format($user->count($user->loans->loan_required_amount-$user->payments->paid_amount==0)) }} Tshs
                         </p>
                     </div>
                 </div>
