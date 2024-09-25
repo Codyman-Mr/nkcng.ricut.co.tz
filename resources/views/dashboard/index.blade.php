@@ -136,7 +136,7 @@
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Total Amount</h5>
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($$user->loans->sum('loan_required_amount')) }} Tshs
+                            {{ number_format($user->loans->sum('loan_required_amount')) }} Tshs
                         </p>
                     </div>
                 </div>
