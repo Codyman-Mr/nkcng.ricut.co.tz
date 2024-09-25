@@ -204,7 +204,7 @@
                          @php
                         $full=0;
                         if($count!=$users->count()){
-                          $full=$users->count()-$count
+                          $full=$users->count()-$count;
                         }
                         @endphp
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
