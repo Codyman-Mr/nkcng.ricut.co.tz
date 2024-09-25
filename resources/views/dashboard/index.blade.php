@@ -171,7 +171,7 @@
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">No of customers </h5>
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($users->count()) }} Tshs
+                            {{ number_format($user->count()) }} Tshs
                         </p>
                     </div>
                 </div>
@@ -203,8 +203,8 @@
                         <h5 class="mb-2 fw-bold">Fully paid customers</h5>
                          @php
                         $full=0;
-                        if($count!=$users->count()){
-                          $full=$users->count()-$count;
+                        if($count!=$user->count()){
+                          $full=$user->count()-$count;
                         }
                         @endphp
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
