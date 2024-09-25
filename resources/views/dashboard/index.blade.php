@@ -171,7 +171,7 @@
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">No of customers </h5>
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($user->count()) }} Tshs
+                            {{ number_format($user->count()) }} People
                         </p>
                     </div>
                 </div>
