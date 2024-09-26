@@ -135,7 +135,7 @@
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Total Amount</h5>
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($user->loans->sum('loan_required_amount')) }} Tshs
+                            {{ number_format($loan->loan_required_amount)) }} Tshs
                         </p>
                     </div>
                 </div>
@@ -155,7 +155,7 @@
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Due Amount</h5>
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($user->loans->sum('loan_required_amount')-$payments->sum('paid_amount')) }} Tshs
+                            {{ number_format($loan->loan_required_amount-$payments->sum('paid_amount')) }} Tshs
                         </p>
                     </div>
                 </div>
@@ -180,16 +180,17 @@
                         @php
                         $count=0;
                         foreach($user->loans as $use){ 
-                           if($use!=""){
                              $totalAmount = $use->loan_required_amount;
                              $paidAmount = $use->payments->sum('paid_amount');
-                             $diff=$totalAmount-$paidAmount;
-                             $count=$diff>0?$count=+1:$count;
+                             if($totalAmount> $paidAmount){
+                                   $count=$count+1;
                              }
+                             
+                             
                             }
                         @endphp
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ $count}} People
+                            {{ number_format($count)}} People
                         </p>
                     </div>
                 </div>
@@ -200,19 +201,18 @@
                         <h5 class="mb-2 fw-bold">Fully paid customers</h5>
                         
                         @php
-                        $fully=0;
+                        $full=0;
                         foreach($user->loans as $use){ 
-                           if($use!=""){
                              $totalAmount = $use->loan_required_amount;
                              $paidAmount = $use->payments->sum('paid_amount');
-                             $diff=$totalAmount-$paidAmount;
-                             $fully=$diff==0?$fully+1:$fully;
+                             if($totalAmount==$paidAmount){
+                                   $full=$full+1;
                              }
-                            }
+                             
                         @endphp
                     
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ $fully }} People
+                            {{number_format($full)  }} People
                         </p>
                     </div>
                 </div>
