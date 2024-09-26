@@ -41,14 +41,13 @@
                     </div>
                 </div>
             </div>
-            <h1>Hello</h1>
 
             <div class="col-12 col-md-3">
                 <div class="card border-0">
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Remaining Amount</h5>
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($loan->sum('loan_required_amount') - $loan->payments->sum('paid_amount')) }} Tshs
+                            {{ number_format($loan->loan_required_amount - $loan->payments->sum('paid_amount')) }} Tshs
                         </p>
                     </div>
                 </div>
@@ -130,7 +129,7 @@
       <div class="mb-3">
         <h3 class="fw-bold fs-4 mb-3">Hello {{Auth::user()->first_name}} {{Auth::user()->last_name}},</h3>
 
-        <div class="row">
+        <div class="row my-2">
             <div class="col-12 col-md-3">
                 <div class="card border-0">
                     <div class="card-body py-4">
@@ -141,18 +140,17 @@
                     </div>
                 </div>
             </div>
-            <h1>Hello</h1>
             <div class="col-12 col-md-3">
                 <div class="card border-0">
                     <div class="card-body py-4">
-                        <h5 class="mb-2 fw-bold">Paid Amount</h5>
+                        <h5 class="mb-2 fw-bold">Paid amount</h5>
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
                             {{ number_format($payments->sum('paid_amount')) }} Tshs
                         </p>
                     </div>
                 </div>
             </div>
-          <div class="col-12 col-md-3">
+            <div class="col-12 col-md-3">
                 <div class="card border-0">
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Due Amount</h5>
@@ -162,10 +160,9 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-
-        <div class="row">
+        </div>      
+        
+        <div class="row my-2">
             <div class="col-12 col-md-3">
                 <div class="card border-0">
                     <div class="card-body py-4">
@@ -180,19 +177,19 @@
                 <div class="card border-0">
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Customers with due  </h5>
-                          @php
+                        @php
                         $count=0;
                         foreach($user->loans as $use){ 
                            if($use!=""){
                              $totalAmount = $use->loan_required_amount;
                              $paidAmount = $use->payments->sum('paid_amount');
                              $diff=$totalAmount-$paidAmount;
-                             $count=$diff>0?$count+1:$count;
+                             $count=$diff>0?$count=+1:$count;
                              }
                             }
                         @endphp
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ $count }} people
+                            {{ $count}} People
                         </p>
                     </div>
                 </div>
@@ -201,14 +198,21 @@
                 <div class="card border-0">
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Fully paid customers</h5>
-                         @php
-                        $full=0;
-                        if($count!=$user->count()){
-                          $full=$user->count()-$count;
-                        }
+                        
+                        @php
+                        $fully=0;
+                        foreach($user->loans as $use){ 
+                           if($use!=""){
+                             $totalAmount = $use->loan_required_amount;
+                             $paidAmount = $use->payments->sum('paid_amount');
+                             $diff=$totalAmount-$paidAmount;
+                             $fully=$diff==0?$fully+1:$fully;
+                             }
+                            }
                         @endphp
+                    
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{  $full }} people
+                            {{ $fully }} People
                         </p>
                     </div>
                 </div>
