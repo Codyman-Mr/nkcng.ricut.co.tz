@@ -208,7 +208,7 @@
                              if($totalAmount==$paidAmount){
                                    $full=$full+1;
                              }
-                             
+                             }
                         @endphp
                     
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
