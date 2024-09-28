@@ -17,7 +17,6 @@ Route::post('/user-registration', [AuthController::class, 'registration'])->name
 Route::get('/otp-verification', [AuthController::class, 'verificationPage'])->name('otp.verification')->middleware('guest');
 Route::post('/otp-verify/{user}', [AuthController::class, 'verifyOtp'])->name('verify.otp')->middleware('guest');
 Route::get('/welcome-page', [AuthController::class, 'welcomePage'])->name('welcome.page')->middleware('auth');
-
 Route::get('/login', [AuthController::class, 'loginPage'])->name('login-page')->middleware('guest');
 Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('guest');
 
@@ -30,6 +29,9 @@ Route::get('/loans-pending', [LoanController::class, 'pendingLoans'])->name('loa
 Route::get('/loans-ongoing', [LoanController::class, 'ongoingLoans'])->name('loans-ongoing')->middleware('auth');
 Route::get('/show-loan/{loan}', [LoanController::class, 'show'])->name('show-loan')->middleware('auth');
 
+
+
+
 Route::get('/loan-payments/{loan}', [PaymentController::class, 'index'])->name('loan-payments')->middleware('auth');
 Route::get('/repayment-alerts', [PaymentController::class, 'repaymentAlerts'])->name('repayment-alerts')->middleware('auth');
 Route::post('/send-repayment-reminders', [PaymentController::class, 'sendRepaymentReminders'])->middleware('auth');
@@ -37,6 +39,7 @@ Route::post('/store-payment/{loan}', [PaymentController::class, 'store'])->name(
 Route::delete('/delete-payment/{payment}', [PaymentController::class, 'destroy'])->name('delete-payment')->middleware('auth');
 Route::get('/payment-report', [PaymentController::class, 'report_payment'])->name('report.daily');
 Route::get('/filter', [PaymentController::class, 'filter']);
+
 
 
 Route::get('/users', [UserController::class, 'index'])->name('users')->middleware('auth');

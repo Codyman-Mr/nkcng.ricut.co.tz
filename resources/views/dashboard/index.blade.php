@@ -1,12 +1,16 @@
 @php
+    $jumla = 0; // Initialize $jumla
     $hideContainer = false;
     foreach ($user->loans as $loan) {
         if ($loan->status === 'pending') {
+            $jumla += $loan['loan_required_amount'];
             $hideContainer = true;
-            break;
+            break; // Consider using break only if you want the first pending loan
         }
     }
 @endphp
+
+
 
 
 @extends('layouts.app')
@@ -125,6 +129,8 @@
 </main>
 @else
 <main class="content px-3 py-4">
+    
+
     <div class="container-fluid">
       <div class="mb-3">
         <h3 class="fw-bold fs-4 mb-3">Hello {{Auth::user()->first_name}} {{Auth::user()->last_name}},</h3>
@@ -133,10 +139,14 @@
             <div class="col-12 col-md-3">
                 <div class="card border-0">
                     <div class="card-body py-4">
+                    
                         <h5 class="mb-2 fw-bold">Total Amount</h5>
+                        
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($user->loans->sum('loan_required_amount')) }} Tshs
+                            {{ number_format($totalLoanAmount) }} Tshs
                         </p>
+                    
+                       
                     </div>
                 </div>
             </div>
@@ -155,7 +165,8 @@
                     <div class="card-body py-4">
                         <h5 class="mb-2 fw-bold">Due Amount</h5>
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($user->loans->sum('loan_required_amount')-$payments->sum('paid_amount')) }} Tshs
+                            {{ number_format($totalLoanAmount - $payments->sum('paid_amount')) }} Tshs
+
                         </p>
                     </div>
                 </div>
@@ -176,83 +187,107 @@
             <div class="col-12 col-md-3">
                 <div class="card border-0">
                     <div class="card-body py-4">
-                        <h5 class="mb-2 fw-bold">Customers with due  </h5>
+                        <h5 class="mb-2 fw-bold">Customers with Due Loans</h5>
                         @php
-                        $count=0;
-                        foreach($user->loans as $use){ 
-                           if($use!=""){
-                             $totalAmount = $use->loan_required_amount;
-                             $paidAmount = $use->payments->sum('paid_amount');
-                             $diff=$totalAmount-$paidAmount;
-                             $count=$diff>0?$count=+1:$count;
-                             }
+                        $count = 0;
+            
+                        // Loop through all users
+                        foreach ($users as $user) { 
+                            foreach ($user->loans as $loan) {
+                                $totalAmount = $loan->loan_required_amount;
+                                $paidAmount = $loan->payments->sum('paid_amount');
+                                if ($totalAmount > $paidAmount) {
+                                    $count++; // Increment count if there's a due loan
+                                    break; // Break to avoid counting the same user multiple times
+                                }
                             }
+                        }
                         @endphp
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ $count}} People
+                            {{ $count }} People
                         </p>
                     </div>
                 </div>
             </div>
-          <div class="col-12 col-md-3">
+            
+            <div class="col-12 col-md-3">
                 <div class="card border-0">
                     <div class="card-body py-4">
-                        <h5 class="mb-2 fw-bold">Fully paid customers</h5>
+                        <h5 class="mb-2 fw-bold">Fully Paid Customers</h5>
                         
                         @php
-                        $fully=0;
-                        foreach($user->loans as $use){ 
-                           if($use!=""){
-                             $totalAmount = $use->loan_required_amount;
-                             $paidAmount = $use->payments->sum('paid_amount');
-                             $diff=$totalAmount-$paidAmount;
-                             $fully=$diff==0?$fully+1:$fully;
-                             }
+                        $fullyPaidCount = 0;
+            
+                        // Iterate through all users to check their loans
+                        foreach ($users as $user) {
+                            foreach ($user->loans as $loan) {
+                                $totalAmount = $loan->loan_required_amount;
+                                $paidAmount = $loan->payments->sum('paid_amount');
+            
+                                // Check if the loan is fully paid
+                                if ($paidAmount >= $totalAmount) {
+                                    $fullyPaidCount++; // Increment count for loans with pending amount of 0
+                                    break; // No need to check further loans for this user
+                                }
                             }
+                        }
                         @endphp
-                    
+                        
                         <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ $fully }} People
+                            {{ $fullyPaidCount }} People
                         </p>
                     </div>
                 </div>
             </div>
+                        </div>
+            </div>
+            
         </div>
 
         <br><br>
-        <h3 class="fw-bold fs-4 my-3">Payments</h3>
+        <h3 class="fw-bold fs-4 my-3">payments this week</h3>
 
         <div class="row">
-          <div class="col-12">
-                @unless(count($payments)==0)
-                <table class="table table-striped text-sm" style="width: 100%;">
-                    <thead class="text-xs bg-gray-50">
-                      <tr>
-                        <th scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">Date of Payment</th>
-                        <th scope="col" class="px-6 py-3" style="width: 15rem; font-weight:600;">Amount Paid</th>
-                        <th scope="col" class="px-6 py-3 text-left" style="width: 10rem; font-weight:600;">Payment Method</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach ($payments as $payment)
-                            <tr class="bg-white border-b cursor-pointer" style="cursor: pointer;">
-                                <td class="py-4">{{\Carbon\Carbon::parse($payment->payment_date)->format('d F Y')}}</td> 
-                                <td class="py-4">{{\Carbon\Carbon::parse($payment->payment_date)->format('d F Y')}}</td>
-                                <td class="py-4">{{\Carbon\Carbon::parse($payment->payment_date)->format('d F Y')}}</td>
-                                <td class="py-4">{{number_format($payment->paid_amount)}} Tsh</td>
-                                <td class="py-4">{{Str::title($payment->payment_method)}}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+            <div class="col-12">
+                <h5 class="mb-2 fw-bold">Customers with Near Loan End Date</h5>
+                @if($nearEndLoans->isEmpty())
+                    <p>No loans nearing end date.</p>
                 @else
-                    <p>No Record Found</p>
-                @endunless
-          </div>
+                    <table class="table table-striped text-sm" style="width: 100%;">
+                        <thead class="text-xs bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">Name</th>
+                                <th scope="col" class="px-6 py-3" style="width: 15rem; font-weight:600;">Required Amount</th>
+                                <th scope="col" class="px-6 py-3" style="width: 15rem; font-weight:600;">Pending Amount</th>
+                                <th scope="col" class="px-6 py-3" style="width: 10rem; font-weight:600;">Days Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($nearEndLoans as $loan)
+                                <tr class="bg-white border-b">
+                                    <td class="py-4">{{ $loan->user->first_name }} {{ $loan->user->last_name }}</td>
+                                    <td class="py-4">{{ number_format($loan->loan_required_amount) }} Tsh</td>
+                                    <td class="py-4">{{ number_format($loan->loan_required_amount - $loan->payments->sum('paid_amount')) }} Tsh</td>
+                                    <td class="py-4">
+                                        @php
+                                            $daysRemaining = \Carbon\Carbon::now()->diffInDays($loan->loan_end_date);
+                                        @endphp
+                                        {{ $daysRemaining }} Days
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+            </div>
         </div>
+        
+        
+        
+        
       </div>
     </div>
+    
 </main>
 @endif
 @endsection

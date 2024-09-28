@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Loan;
 use App\Models\User;
 use App\Models\Payment;
 
@@ -15,11 +15,31 @@ class AuthController extends Controller
 {
     public function dashboard()
     {
-        return view('dashboard.index', [
-            'payments' => Payment::with('loan')->get(),
-            'user' => Auth::user()->load('loans')
-        ]);
+        
+        // Get all payments with their associated loans
+        $payments = Payment::with('loan')->get();
+    
+        // Get the current logged-in user and load their loans
+        $user = Auth::user()->load('loans');
+    
+        // Calculate total loan amount for all users
+        $totalLoanAmount = Loan::sum('loan_required_amount');
+    
+        // Fetch all users with their loans and payments
+        $users = User::with('loans.payments')->get();
+    
+        // Fetch loans that are near their end date
+        $nearEndLoans = Loan::whereNotNull('loan_end_date') // Ensure the end date exists
+                            ->whereDate('loan_end_date', '>', now()) // Filter loans with end date in the future
+                            ->orderBy('loan_end_date', 'asc') // Sort by nearest end date
+                            ->take(12) // Limit to 12 records
+                            ->with('user') // Include the user associated with the loan
+                            ->get();
+    
+        return view('dashboard.index', compact('payments', 'user', 'totalLoanAmount', 'users', 'nearEndLoans'));
     }
+    
+
     public function registrationPage()
     {
         return view('auth.registration');
