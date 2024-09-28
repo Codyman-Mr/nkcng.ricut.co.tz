@@ -13,7 +13,7 @@ class PaymentController extends Controller
     public function index(Loan $loan)
     {
         return view('loan.loan-payments', [
-            'loan' => $loan->load(['user', 'payments'])
+            'loan' => $loan->load(['user', 'payments','loans'])
         ]);
     }
 
@@ -172,11 +172,7 @@ class PaymentController extends Controller
         }
     }
    
-    public function report_payment()
-    { 
-        $payment_report = Payment::all();
-        return view('report.daily', compact('payment_report'));
-    }
+    
     public function filter(Request $request){
       $start_date=$request->start_date;
       $end_date=$request->end_date;

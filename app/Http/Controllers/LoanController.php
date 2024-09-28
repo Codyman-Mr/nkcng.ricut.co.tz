@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Auth;
 
 class LoanController extends Controller
 {
+   
+
     public function create(User $user = null)
     {
         $borrower = $user != null ? $user : Auth::user();
@@ -72,11 +74,32 @@ class LoanController extends Controller
                 'status' => 'pending',
                 'payment_type' => 'loan',
             ]);
+            if (Loan::where('user_id', $user->id)->where('status', 'approved')->exists()) {
+                return response()->json(['message' => 'User already has an approved loan.'], 400);
+            }
 
             $loan = Loan::create([
                 'user_id' => $user->id,
                 'installation_id' => $installation->id,
+                'loan_required_amount' => str_replace(',', '', $request->loan_required_amount),
             ]);
+
+            \Log::info('New loan created', [
+                'loan_id' => $loan->id,
+                'loan_required_amount' => $loan->loan_required_amount,
+                'user_id' => $user->id,
+            ]);
+
+            $existingLoan = Loan::where('user_id', $user->id)->where('status', 'approved')->first();
+
+            if ($existingLoan) {
+                \Log::info('Loan creation aborted: User already has an approved loan.', [
+                    'user_id' => $user->id,
+                    'existing_loan_amount' => $existingLoan->loan_required_amount,
+                ]);
+                return response()->json(['message' => 'User already has an approved loan.'], 400);
+            }
+         
 
             $this->saveLoanDocument($loan->id, "{$user->first_name} {$user->last_name} - Vehicle Registration Card", $request->file('vehicle_registration_card'));
 
@@ -121,6 +144,21 @@ class LoanController extends Controller
             'loan' => $loan->load(['user', 'documents', 'installation.customerVehicle']),
             'cylinders' => CylinderType::get()
         ]);
+    }
+
+    public function Loan_sum(Loan $loan)
+    {
+       // Get loans for the dashboard
+    $loans = Loan::where('status', 'approved')->get();
+
+    // Log loan amounts for debugging
+    \Log::info('Loan amounts being summed:', $loans->pluck('loan_required_amount')->toArray());
+
+    // Sum up the amounts
+    $loan_add = $loans->sum('loan_required_amount');
+    \Log::info('Total loan amount:', ['total' => $loan_add]);
+
+    return view('dashboard.index', compact('loan_add'));
     }
 
     public function pendingLoans()

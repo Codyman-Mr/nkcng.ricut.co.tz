@@ -11,6 +11,17 @@ class Loan extends Model
 
     protected $guarded = [];
 
+    protected $fillable = [
+        'user_id',
+        'installation_id',
+        'loan_type',
+        'loan_required_amount',
+        'loan_payment_plan',
+        'loan_start_date',
+        'loan_end_date',
+        'status',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

@@ -18,6 +18,9 @@ return new class extends Migration
             $table->enum('loan_type', ['NK CNG Automotive Loan', 'Maendeleo Bank Loan'])->default('NK CNG Automotive Loan');
             $table->decimal('loan_required_amount', 10, 2)->default(0);
             $table->enum('loan_payment_plan', ['weekly', 'bi-weekly', 'monthly'])->default('weekly');
+            $table->date('loan_start_date')->nullable(); // Allows null values if needed
+            $table->date('loan_end_date')->nullable();
+
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
         });
