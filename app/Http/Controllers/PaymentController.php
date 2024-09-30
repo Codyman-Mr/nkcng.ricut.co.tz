@@ -13,7 +13,7 @@ class PaymentController extends Controller
     public function index(Loan $loan)
     {
         return view('loan.loan-payments', [
-            'loan' => $loan->load(['user', 'payments','loans'])
+            'loan' => $loan->load(['user', 'payments'])
         ]);
     }
 
