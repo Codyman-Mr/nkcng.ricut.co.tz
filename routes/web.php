@@ -46,5 +46,3 @@ Route::get('/users', [UserController::class, 'index'])->name('users')->middlewar
 Route::post('/store-user', [UserController::class, 'store'])->middleware('auth');
 Route::put('/update-user/{user}', [UserController::class, 'update'])->name('update-user')->middleware('auth');
 Route::delete('/delete-user/{user}', [UserController::class , 'destroy'])->name('delete-user')->middleware('auth');
-
-

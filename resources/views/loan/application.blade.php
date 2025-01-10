@@ -3,7 +3,7 @@
 
 <meta name="csrf-token" content="{{csrf_token()}}">
 
-@section('content')
+@section('main-content')
 <div class="pagetitle d-flex justify-content-end w-100">
     <button type="button" class="btn btn-primary" onclick='$("#termsModal").modal("show")'>Terms & Agreement</button>
 </div>
