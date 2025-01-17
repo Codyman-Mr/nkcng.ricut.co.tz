@@ -3,12 +3,12 @@
 
 <meta name="csrf-token" content="{{csrf_token()}}">
 
-@section('content')
+@section('main-content')
 <div class="pagetitle d-flex justify-content-end w-100">
-    <button type="button" class="btn btn-primary" onclick='$("#createModal").modal("show")'>Add User</button>
+    <button type="button" class="btn btn-primary text-gray-900" onclick='$("#createModal").modal("show")'>Add User</button>
 </div>
 
-<div class="wrapper wrapper-content animated fadeInRight">
+<div class="container-fluid mt-4 px-6">
     <div class="row">
         <div class="col-lg-12">
             <div class="ibox">

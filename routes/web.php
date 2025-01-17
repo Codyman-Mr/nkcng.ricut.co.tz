@@ -37,8 +37,8 @@ Route::get('/repayment-alerts', [PaymentController::class, 'repaymentAlerts'])->
 Route::post('/send-repayment-reminders', [PaymentController::class, 'sendRepaymentReminders'])->middleware('auth');
 Route::post('/store-payment/{loan}', [PaymentController::class, 'store'])->name('store-payment')->middleware('auth');
 Route::delete('/delete-payment/{payment}', [PaymentController::class, 'destroy'])->name('delete-payment')->middleware('auth');
-Route::get('/payment-report', [PaymentController::class, 'report_payment'])->name('report.daily');
 Route::get('/filter', [PaymentController::class, 'filter']);
+Route::get('/report', [Reports::class, 'index'])->name('report')->middleware('auth');
 
 
 

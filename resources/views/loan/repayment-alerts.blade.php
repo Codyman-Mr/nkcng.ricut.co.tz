@@ -16,14 +16,14 @@
 
 <meta name="csrf-token" content="{{csrf_token()}}">
 
-@section('content')
+@section('main-content')
 <div class="pagetitle d-flex justify-content-end p-0">
     <button type="button" class="btn btn-sm btn-outline-info p-2" onclick='sendPaymentReminders();'>
         <span class="text-sm" style="font-size:0.7rem;">Send Payment Reminder(s) <i class="bi bi-bell-fill ml-2"></i></span>
     </button>
 </div>
 
-<div class="wrapper wrapper-content animated fadeInRight">
+<div class="container-fluid mt-2 mx-auto p-4">
     <div class="row">
         <div class="col-lg-12 p-0">
             <div class="ibox">

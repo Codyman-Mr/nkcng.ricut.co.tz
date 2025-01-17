@@ -3,14 +3,14 @@
 
 <meta name="csrf-token" content="{{csrf_token()}}">
 
-@section('content')
-<div class="row wrapper border-bottom white-bg page-heading">
+@section('main-content')
+<div class="border-b border-gray-200 m-4 p-4">
     <div class="col-sm-7">
-        <h2 class="font-weight-bold">Pending Loans</h2>
+        <h2 class="fw-bold">Pending Loans</h2>
     </div>
 </div>
 
-<div class="wrapper wrapper-content animated fadeInRight">
+<div class="m-4 p-4">
     <div class="row">
         <div class="col-lg-12">
             <div class="ibox">

@@ -13,6 +13,7 @@
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.5",
         "php-mqtt/client": "^2.2",
+        "pusher/pusher-php-server": "^7.2",
         "twbs/bootstrap-icons": "^1.11"
     },
     "require-dev": {

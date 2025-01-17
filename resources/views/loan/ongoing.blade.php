@@ -3,7 +3,7 @@
 
 <meta name="csrf-token" content="{{csrf_token()}}">
 
-@section('content')
+@section('main-content')
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-sm-7">
         <h2 class="font-weight-bold">Ongoing Loans</h2>

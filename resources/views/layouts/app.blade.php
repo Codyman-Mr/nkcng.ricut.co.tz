@@ -2,6 +2,10 @@
 
 
 @section('content')
+    @php
+        $initials =
+            strtoupper(substr(Auth::user()->first_name, 0, 1)) . strtoupper(substr(Auth::user()->last_name, 0, 1));
+    @endphp
     <div class="w-full h-full">
         <dh-component>
 
@@ -9,7 +13,7 @@
             <nav class="fixed top-0 left-0 right-4 w-full h-16 bg-white shadow z-20" x-data="{ isOpen: false }">
                 <div class="container mx-auto px-6 py-4 flex justify-between items-center">
                     <div class="text-lg font-semibold text-gray-800 ml-64">
-                        Dashboard
+                        @yield('title')
                     </div>
                     <div class="flex items-center space-x-4">
                         <!-- Hamburger menu for mobile -->
@@ -22,14 +26,48 @@
                         <!-- Nav links -->
                         <div class="hidden sm:flex space-x-4 ">
                             <div class="w-12 h-6 bg-red border-r border-gray-200 text-gray-600 flex items-baseline">
-                                <img src="{{asset('svg/notification-bell.svg')}}" alt="" class="w-6 h-6 text-gray-700">
+                                <img src="{{ asset('svg/notification-bell.svg') }}" alt=""
+                                    class="w-6 h-6 text-gray-700">
                             </div>
-                            <a href="#" class="text-gray-800 hover:text-gray-600">
-                                <div class="w-6 h-6 rounded-full bg-transparent ">
-                                   <img src="{{ asset('svg/user.svg') }}" alt="user image" class="w-6 h-6">
+                            <a href="#" class="text-gray-800 hover:text-gray-900">
+                                <div
+                                    class="relative inline-flex items-center justify-center w-6 h-6 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600">
+                                    <span class="text-sm text-gray-600 dark:text-gray-300">{{ $initials }}</span>
                                 </div>
+
+                                <button id="dropdownDelayButton" data-dropdown-toggle="dropdownDelay"
+                                    data-dropdown-delay="500" data-dropdown-trigger="hover"
+                                    class="text-gray-800  hover:text-gray-800  focus:outline-none  font-medium rounded-lg text-md  text-center inline-flex items-center "
+                                    type="button">
+                                    <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2" d="m1 1 4 4 4-4" />
+                                    </svg>
+                                </button>
+
+                                <!-- Dropdown menu -->
+                                <div id="dropdownDelay"
+                                    class="z-10 hidden bg-white divide-y divide-gray-400 rounded-lg shadow w-44 dark:bg-gray-700">
+                                    <ul class="py-2 text-sm text-gray-700 dark:text-gray-700"
+                                        aria-labelledby="dropdownDelayButton">
+                                        <li>
+                                            <a href="#"
+                                                class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Profile</a>
+                                        </li>
+                                        <li>
+                                            <a href="#"
+                                                class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Settings</a>
+                                        </li>
+                                        <li>
+                                            <a href="#"
+                                                class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Sign
+                                                out</a>
+                                        </li>
+                                    </ul>
+                                </div>
+
                             </a>
-                            <a href="#" class="text-gray-800 hover:text-gray-600">{{ Auth::user()->first_name }}</a>
                         </div>
                     </div>
                 </div>
@@ -113,7 +151,7 @@
                             </li>
                             <li
                                 class="flex w-full justify-between text-gray-400 hover:text-gray-300 cursor-pointer items-center mb-6">
-                                <a href="/reports"
+                                <a href="/report"
                                     class="flex items-center focus:outline-none focus:ring-2 focus:ring-white">
                                     <i class="bi bi-file-bar-graph-fill text-sm"></i>
                                     <span class="text-sm ml-2">Reports</span>
