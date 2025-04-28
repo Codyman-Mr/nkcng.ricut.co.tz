@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Broadcasting\BroadcastServiceProvider;
+
 return [
 
     /*
@@ -122,5 +125,10 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+
+    // 'providers' => [
+    //     // ...
+    //     BroadcastServiceProvider::class,
+    // ],
 
 ];

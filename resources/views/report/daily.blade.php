@@ -3,7 +3,7 @@
 
 @section('main-content')
     @if (Auth::user()->role == 'admin')
-        <livewire:test />
+       <livewire:reports-component />
     @else
         <h2>Reports for Users</h2>
     @endif

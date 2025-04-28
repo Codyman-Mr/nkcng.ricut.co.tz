@@ -7,6 +7,9 @@ use App\Models\Payment;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+
 
 class PaymentController extends Controller
 {
@@ -17,63 +20,128 @@ class PaymentController extends Controller
         ]);
     }
 
+    public function calculateNextDueDate(Loan $loan){
+        $lastPaymentDate = $loan->payments->max('payment_date')
+            ? Carbon::parse($loan->payments->max('payment_date'))
+            : Carbon::parse($loan->created_at);
+
+        return match ($loan->payment_plan) {
+            'weekly' => $lastPaymentDate->copy()->addWeek(),
+            'monthly' => $lastPaymentDate->copy()->addMonth(),
+            default => $lastPaymentDate->copy()->addWeek(),
+        };
+    }
+
     public function repaymentAlerts()
     {
-        $unpaid_loans = Loan::unPaidLoans();
-        return view('loan.repayment-alerts', compact('unpaid_loans'));
+        // $unpaid_loans = Loan::unPaidLoans();
+        // return view('loan.repayment-alerts', compact('unpaid_loans'));
+
+        $dueSoonLoans = Loan::with(['user', 'payments'])
+            ->where('status', 'active')
+            ->get()
+            ;
+
+        return view('loan.repayment-alerts', compact('dueSoonLoans'));
     }
+
+   
+
+
 
     public function sendRepaymentReminders(Request $request)
     {
-        $request->validate([
-            'recipients' => 'required|array',
+        // Get validated recipients from request (if needed)
+        $validated = $request->validate([
+            'recipients' => 'sometimes|array', // Remove 'required' if not used
+            'recipients.*' => 'exists:loans,id'
         ]);
 
-        $unpaid_loans = Loan::unPaidLoans();
-        $recipients = [];
+        // Get unpaid loans (either all or filtered by request)
+        $loans = isset($validated['recipients'])
+            ? Loan::whereIn('id', $validated['recipients'])->unPaidLoans()
+            : Loan::unPaidLoans();
 
-        foreach ($unpaid_loans as $key => $loan) {
-            $recipients[] = [
-                'message' => "Habari " . Str::title($loan->user->first_name) . " " . Str::title($loan->user->last_name) . ", Tunakuandikia kukukumbusha kwamba bado unadaiwa kiasi cha " . number_format($loan->loan_required_amount - $loan->payments->sum('paid_amount')) . ". Tafadhali endelea kulipia deni lako ili kuepuka usumbufu wowote.",
-                'phoneNumber' => $this->convertPhoneNumberToInternationalFormat($loan->user->phone_number),
-            ];
-        }
-
+        // Prepare SMS parameters from .env
+        $username = config('services.africastalking.username');
+        $apiKey = config('services.africastalking.api_key');
         $enqueue = 1;
-        $username = 'MIKE001';
-        $apiKey = 'atsk_a37133bcba27a4928705557b9903b016812000533f89a91f06747a289a8654dca1dac55d';
 
-        try {
-            foreach ($recipients as $recipient) {
+        $failedRecipients = [];
+        $successCount = 0;
+
+        foreach ($loans as $loan) {
+            try {
+                // Skip loans without valid phone numbers
+                if (!$loan->user->phone_number) {
+                    Log::warning("SMS skipped - no phone number", ['loan_id' => $loan->id]);
+                    continue;
+                }
+
+                // Calculate outstanding amount
+                $outstandingAmount = number_format(
+                    $loan->loan_required_amount - $loan->payments->sum('paid_amount')
+                );
+
+                // Build message
+                $message = "Habari {$loan->user->formal_name}, "
+                    . "Tunakukumbusha kwa deni la Tsh $outstandingAmount. "
+                    . "Tafadhali endelea kulipia deni lako ili kuepuka usumbufu wowote.";
+
+                // Send SMS
                 $response = Http::withHeaders([
                     'Accept' => 'application/json',
-                    'Content-Type' => 'application/x-www-form-urlencoded',
                     'apiKey' => $apiKey,
                 ])->asForm()->post('https://api.africastalking.com/version1/messaging', [
-                    'username' => $username,
-                    'to' => $recipient['phoneNumber'],
-                    'from' => 'NK CNG',
-                    'message' => $recipient['message'],
-                    'enqueue' => $enqueue,
-                ]);
+                            'username' => $username,
+                            'to' => $this->formatPhoneNumber($loan->user->phone_number),
+                            'from' => 'NK CNG',
+                            'message' => $message,
+                            'enqueue' => $enqueue,
+                        ]);
 
-                if (!$response->successful()) {
-                    return response()->json(['message' => 'Failed to send SMS to ' . $recipient['phoneNumber'], 'error' => $response->body()], 500);
+                if ($response->successful()) {
+                    $successCount++;
+                    Log::info("SMS sent successfully", [
+                        'phone' => $loan->user->phone_number,
+                        'loan_id' => $loan->id
+                    ]);
+                } else {
+                    $failedRecipients[] = [
+                        'phone' => $loan->user->phone_number,
+                        'error' => $response->json('SMSMessageData.Message') ?? 'Unknown error'
+                    ];
+                    Log::error("SMS failed", [
+                        'phone' => $loan->user->phone_number,
+                        'response' => $response->body()
+                    ]);
                 }
+
+            } catch (\Exception $e) {
+                $failedRecipients[] = [
+                    'phone' => $loan->user->phone_number ?? 'N/A',
+                    'error' => $e->getMessage()
+                ];
+                Log::critical("SMS exception", [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
-
-            return response()->json(['message' => 'SMS sent successfully!'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'An error occurred while sending SMS', 'error' => $e->getMessage()], 500);
         }
-    }
 
+        return response()->json([
+            'message' => "Reminders processed",
+            'success_count' => $successCount,
+            'failed_count' => count($failedRecipients),
+            'failed_recipients' => $failedRecipients
+        ], 200);
+    }
 
     public function store(Request $request, Loan $loan)
     {
         $request->validate([
             'payment_date' => 'required|date',
-            'paid_amount' => 'required|string',
+            'paid_amount' => 'required|numeric|min:0',
             'payment_method' => 'required|string',
         ]);
 
@@ -129,7 +197,7 @@ class PaymentController extends Controller
             $accessToken = $token['access_token'];
 
             $paymentData = [
-                'reference_number' => str_shuffle(Str::random(15) . now()->timestamp),
+                'reference_number' => str::uuid()->toString(),
                 'payment_network' => 30,
                 'buyer_phone_number' => $request->input('payer_phone_number'),
                 'reason' => $request->input('reason'),
@@ -171,9 +239,15 @@ class PaymentController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
-   
-    
+
+
     public function filter(Request $request){
+
+        $request->validate([
+            'start_date'=> 'required|date',
+            'end_date'=> 'required|date|after_or_equal:start_date',
+        ]);
+
       $start_date=$request->start_date;
       $end_date=$request->end_date;
 
@@ -182,9 +256,9 @@ class PaymentController extends Controller
                                ->get();
       return view('report.daily',compact('payment_report'));
 
-                         
+
 
     }
-     
-    
+
+
 }

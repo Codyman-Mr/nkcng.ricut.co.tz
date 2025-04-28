@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Loan;
-use App\Models\User;
 use App\Models\CylinderType;
 use App\Models\Installation;
 use App\Models\LoanDocument;
+use App\Models\User;
+use App\Models\Payment;
+
 use Illuminate\Http\Request;
 use App\Models\CustomerVehicle;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 
 class LoanController extends Controller
 {
-   
+
 
     public function create(User $user = null)
     {
@@ -25,7 +27,7 @@ class LoanController extends Controller
     public function store(Request $request, User $user)
     {
         $request->validate([
-            'dob' => 'required|date',
+            'dob' => ['required', 'date', 'before:' . now()->subYears(18)->format('Y-m-d')],
             'gender' => 'required',
             'nida_no' => 'required|string|max:255',
             'nida_front_view' => 'file|mimes:jpeg,jpg,png,pdf',
@@ -61,7 +63,7 @@ class LoanController extends Controller
             ]);
 
             $vehicle = CustomerVehicle::create([
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'model' => $request->vehicle_name,
                 'plate_number' => $request->plate_number,
                 'vehicle_type' => $request->vehicle_type,
@@ -84,22 +86,22 @@ class LoanController extends Controller
                 'loan_required_amount' => str_replace(',', '', $request->loan_required_amount),
             ]);
 
-            \Log::info('New loan created', [
-                'loan_id' => $loan->id,
-                'loan_required_amount' => $loan->loan_required_amount,
-                'user_id' => $user->id,
-            ]);
+            // \Log::info('New loan created', [
+            //     'loan_id' => $loan->id,
+            //     'loan_required_amount' => $loan->loan_required_amount,
+            //     'user_id' => $user->id,
+            // ]);
 
             $existingLoan = Loan::where('user_id', $user->id)->where('status', 'approved')->first();
 
             if ($existingLoan) {
-                \Log::info('Loan creation aborted: User already has an approved loan.', [
-                    'user_id' => $user->id,
-                    'existing_loan_amount' => $existingLoan->loan_required_amount,
-                ]);
+                // \Log::info('Loan creation aborted: User already has an approved loan.', [
+                //     'user_id' => $user->id,
+                //     'existing_loan_amount' => $existingLoan->loan_required_amount,
+                // ]);
                 return response()->json(['message' => 'User already has an approved loan.'], 400);
             }
-         
+
 
             $this->saveLoanDocument($loan->id, "{$user->first_name} {$user->last_name} - Vehicle Registration Card", $request->file('vehicle_registration_card'));
 
@@ -138,41 +140,102 @@ class LoanController extends Controller
         ]);
     }
 
+
+
     public function show(Loan $loan)
     {
-        return view('loan.show-loan', [
+        return view(view: 'loan.show-loan', data: [
             'loan' => $loan->load(['user', 'documents', 'installation.customerVehicle']),
+            'required_amount' => $loan->loan_required_amount,
+            'loan_payment_plan' => $loan->loan_payment_plan,
             'cylinders' => CylinderType::get()
         ]);
     }
 
     public function Loan_sum(Loan $loan)
     {
-       // Get loans for the dashboard
-    $loans = Loan::where('status', 'approved')->get();
+        // Get loans for the dashboard
+        $loans = Loan::where('status', 'approved')->get();
 
-    // Log loan amounts for debugging
-    \Log::info('Loan amounts being summed:', $loans->pluck('loan_required_amount')->toArray());
+        // Log loan amounts for debugging
+        // \Log::info('Loan amounts being summed:', $loans->pluck('loan_required_amount')->toArray());
 
-    // Sum up the amounts
-    $loan_add = $loans->sum('loan_required_amount');
-    \Log::info('Total loan amount:', ['total' => $loan_add]);
+        // Sum up the amounts
+        $loan_add = $loans->sum('loan_required_amount');
+        // \Log::info('Total loan amount:', ['total' => $loan_add]);
 
-    return view('dashboard.index', compact('loan_add'));
+        return view('dashboard.index', compact('loan_add'));
     }
 
     public function pendingLoans()
     {
         return view('loan.pending-loans', [
-            'loans' => Loan::where('status', 'pending')->with(['installation.customerVehicle.user'])->get()
+            'loans' => Loan::where('status', 'pending')->with(['installation.customerVehicle.user'])->paginate(5)->onEachSide(2),
         ]);
     }
 
-    public function ongoingLoans()
+    public function ongoingLoans(Request $request)
     {
-        return view('loan.ongoing', [
-            'loans' => Loan::where('status', 'approved')->with(['installation.customerVehicle'])->get()
-        ]);
+        // Get all payments with their associated loans
+        $payments = Payment::with('loan')->get();
+
+        // Get the current logged-in user and load their loans
+        $user = Auth::user();
+
+
+        // Calculate total loan amount for all users
+        $totalLoanAmount = Loan::sum('loan_required_amount');
+
+        // Fetch all users with their loans and payments
+        $users = User::with('loans.payments')->get();
+
+        // Fetch loans that are near their end date
+        $nearEndLoans = Loan::whereNotNull('loan_end_date') // Ensure the end date exists
+            ->whereDate('loan_end_date', '>', now()) // Filter loans with end date in the future
+            ->orderBy('loan_end_date', 'asc') // Sort by nearest end date
+            ->take(12) // Limit to 12 records
+            ->with('user') // Include the user associated with the loan
+            ->get();
+
+        $loans = Loan::where('status', 'approved')
+        ->with(['installation.customerVehicle'])
+        ->paginate(10)->onEachSide(2);
+
+        // Get the search query from the request
+        $query = $request->input('query');
+
+        // Performing the search
+        $loans_query = Loan::whereHas('user', function ($q) use ($query) {
+            $q->where('first_name', 'like', "%$query%")
+                ->orWhere('last_name', 'like', "%$query%");
+        })
+            ->orWhere('loan_required_amount', 'like', "%$query%")
+            ->orWhere('loan_end_date', 'like', "%$query%")
+            ->get();
+
+        return view('loan.ongoing', compact('payments', 'user', 'totalLoanAmount', 'users', 'nearEndLoans', 'loans', 'loans_query'));
+    }
+
+
+
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (!$query) {
+            return redirect()->route(''); // Redirect back if query is empty
+        }
+
+        $loans = Loan::whereHas('user', function ($q) use ($query) {
+            $q->where('first_name', 'like', "%$query%")
+                ->orWhere('last_name', 'like', "%$query%");
+        })
+            ->orWhere('loan_required_amount', 'like', "%$query%")
+            ->orWhere('loan_end_date', 'like', "%$query%")
+            ->get();
+
+        // Pass the filtered loans to the view
+        return view('loan.ongoing', compact('loans'));
     }
 
     public function approveLoan(Request $request, Loan $loan)

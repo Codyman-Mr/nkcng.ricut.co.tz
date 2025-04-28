@@ -1,17 +1,29 @@
 
-/**
- * Echo exposes an expressive API for subscribing to channels and listening
- * for events that are broadcast by Laravel. Echo and event broadcasting
- * allows your team to easily build robust real-time web applications.
- */
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 
-// import Echo from 'laravel-echo'
+window.Pusher = Pusher;
 
-// window.Pusher = require('pusher-js');
+window.Echo = new Echo({
+    broadcaster: 'reverb',
+    key: process.env.VITE_REVERB_APP_KEY,
+    wsHost: process.env.VITE_REVERB_HOST,
+    wsPort: process.env.VITE_REVERB_PORT,
+    wssPort: process.env.VITE_REVERB_PORT,
+    scheme: process.env.VITE_REVERB_SCHEME,
+    enabledTransports: ['ws', 'wss'],
+});
 
-// window.Echo = new Echo({
-//     broadcaster: 'pusher',
-//     key: process.env.MIX_PUSHER_APP_KEY,
-//     cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-//     forceTLS: true
-// });
+console.log('Echo initialized, connecting to Reverb...');
+
+window.Echo.connector.pusher.connection.bind('connected', () => {
+    console.log('Connected to Reverb WebSocket');
+});
+
+window.Echo.connector.pusher.connection.bind('error', (error) => {
+    console.error('Reverb connection error:', error);
+});
+
+window.Echo.channel('locations').listen('LocationUpdated', (event) => {
+    console.log('Received LocationUpdated event:', event);
+});

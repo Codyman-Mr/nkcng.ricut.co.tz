@@ -1,112 +1,78 @@
-<div class="bg-green">
-    <main class="content px-3 py-4">
-    <div class="container-fluid {{ $hideContainer ? 'd-none' : '' }}">
-      <div class="mb-3">
-        <h3 class="fw-bold fs-4 mb-3">Hello {{Auth::user()->first_name}} {{Auth::user()->last_name}},</h3>
-        <div class="row">
-            @foreach ($user->loans as $loan)
-            <div class="col-12 col-md-3">
-                <div class="card border-0">
-                    <div class="card-body py-4">
-                        <h5 class="mb-2 fw-bold">Required Amount</h5>
-                        <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($loan->loan_required_amount) }} Tshs
-                        </p>
+@section('main-content')
+
+    <div>
+        @if ($loan)
+            <div class="status-container">
+                Loan Status:
+                @if ($loan->status === 'approved')
+                    <table class="table table-striped text-sm" style="width: 100%;">
+                        <thead class="text-xs bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">Name</th>
+                                <th scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">Phone Number
+                                </th>
+                                <th scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">Amount
+                                    Loaned</th>
+                                <th scope="col" class="px-6 py-3" style="width: 15rem; font-weight:600;">Amount Paid
+                                </th>
+                                <th scope="col" class="px-6 py-3" style="width: 15rem; font-weight:600;">Amount Remaining
+                                </th>
+
+                                <th scope='col' class="px-6 py-3" style="width: 15rem; font-weight:600;">Time Left
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach ($payments as $payment)
+                                @if ($payment->loan->user_id == Auth::id())
+                                    <tr class="bg-white border-b cursor-pointer" style="cursor: pointer;">
+                                        <td scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">
+                                            {{ \Carbon\Carbon::parse($payment->loan?->user?->first_name)->format('d F Y') }}
+                                        </td>
+                                        <td scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">
+                                            {{ \Carbon\Carbon::parse($payment->loan?->user?->customer_vehicles->plate_number)->format('d F Y') }}
+                                        </td>
+                                        <td class="py-4">
+                                            {{ \Carbon\Carbon::parse($payment->payment_date)->format('d F Y') }}</td>
+                                        <td class="py-4">{{ number_format($payment->paid_amount) }} Tsh</td>
+                                        <td class="py-4">{{ Str::title($payment->payment_method) }}</td>
+                                    </tr>
+                                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
+                @elseif ($loan->status === 'pending')
+                    <div class="flex flex-col items-center justify-center gap-4 mt-4">
+                        <h3 class="text-3xl font-bold text-gray-900"> Your request is pending approval </h3>
+                        <h3 class="text-3xl font-bold text-gray-900"> Please wait </h3>
                     </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-3">
-                <div class="card border-0">
-                    <div class="card-body py-4">
-                        <h5 class="mb-2 fw-bold">Amount Paid</h5>
-                        <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($loan->payments->sum('paid_amount')) }} Tshs
-                        </p>
+                @elseif ($loan->status === 'denied')
+                    <div class="flex flex-col items-center justify-center gap-4 mt-4">
+                        <h3 class="text-3xl font-bold text-gray-900"> Your request Has been Denied </h3>
+                        <h3 class="text-3xl font-bold text-gray-900"> Please Contact our offices for more clarification
+                        </h3>
                     </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-3">
-                <div class="card border-0">
-                    <div class="card-body py-4">
-                        <h5 class="mb-2 fw-bold">Remaining Amount</h5>
-                        <p class="mb-2 fw-bold" style="font-size: 1.5rem;">
-                            {{ number_format($loan->loan_required_amount - $loan->payments->sum('paid_amount')) }} Tshs
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-3">
-                <div class="card border-0">
-                    <div class="card-body py-4">
-                        <h5 class="mb-2 fw-bold">Payment Progress</h5>
-                        @php
-                            $totalAmount = $loan->loan_required_amount;
-                            $paidAmount = $loan->payments->sum('paid_amount');
-                            $progressPercentage = $totalAmount > 0 ? ($paidAmount / $totalAmount) * 100 : 0;
-                        @endphp
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: {{$progressPercentage}}%;" aria-valuenow="{{$progressPercentage}}" aria-valuemin="0" aria-valuemax="100">
-                                {{ number_format($progressPercentage) }}%
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-
-        <br><br>
-        <h3 class="fw-bold fs-4 my-3">Payment History</h3>
-
-        <div class="row">
-          <div class="col-12">
-                @unless(count($payments)==0)
-                <table class="table table-striped text-sm" style="width: 100%;">
-                    <thead class="text-xs bg-gray-50">
-                      <tr>
-                        <th scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">Cutomer Name</th>
-                        <th scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">Plate Number</th>
-                        <th scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">Date of Payment</th>
-                        <th scope="col" class="px-6 py-3" style="width: 15rem; font-weight:600;">Amount Paid</th>
-                        <th scope="col" class="px-6 py-3 text-left" style="width: 10rem; font-weight:600;">Payment Method</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach ($payments as $payment)
-                            @if ($payment->loan->user_id == Auth::id())
-                                <tr class="bg-white border-b cursor-pointer" style="cursor: pointer;">
-                                    <td scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">{{\Carbon\Carbon::parse($payment->loan?->user?->first_name)->format('d F Y')}}</td>
-                                    <td scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">{{\Carbon\Carbon::parse($payment->loan?->user?->customer_vehicles->plate_number)->format('d F Y')}}</td>
-                                    <td class="py-4">{{\Carbon\Carbon::parse($payment->payment_date)->format('d F Y')}}</td>
-                                    <td class="py-4">{{number_format($payment->paid_amount)}} Tsh</td>
-                                    <td class="py-4">{{Str::title($payment->payment_method)}}</td>
-                                </tr>
-                            @endif
-                        @endforeach
-                    </tbody>
-                </table>
+                @elseif ($loan->status === 'none')
+                    <span class="text-gray-500">No Status 🚫</span>
                 @else
-                    <p>No Record Found</p>
-                @endunless
-          </div>
-        </div>
-      </div>
+                    <span class="text-gray-500">Unknown Status 🔍</span>
+                @endif
+            </div>
+        @else
+            <div class=" flex justify-center items-center bg-green-100  px-4 py-3 rounded-lg">
+                <div class="flex flex-col items-center justify-center gap-4 mt-4">
+                    <h3 class="text-3xl font-bold text-gray-900">You don't have a loan yet</h3>
+
+                    <button type="button"
+                        class="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700">
+                        <a href="{{ route('loan-application') }}">Apply for a loan</a></button>
+                </div>
+
+            </div>
+        @endif
     </div>
 
-    @if($hideContainer)
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Loan Application Status</h5>
-                    <p class="card-text">Your loan application is still awaiting review. Please check back later for updates.</p>
-                </div>
-            </div>
-        </div>
-    @endif
-</main>
 
-</div>
+
+@endsection

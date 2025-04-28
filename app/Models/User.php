@@ -6,12 +6,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
     protected $guarded = [];
+
+    public function getFormalNameAttribute()
+    {
+        return Str::title($this->first_name) . ' ' . Str::title($this->last_name);
+    }
 
     public function vehicles()
     {
@@ -33,5 +39,16 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
         ];
+    }
+
+
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
+    public function gpsDevice()
+    {
+        return $this->hasOne(GpsDevice::class);
     }
 }

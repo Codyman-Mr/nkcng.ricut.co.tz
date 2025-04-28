@@ -6,17 +6,35 @@ use Exception;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Livewire\WithPagination;
 
 class UserController extends Controller
 {
+    use WithPagination;
+    public $search = '';
     public function index()
     {
-        $users = User::get();
-        
-        
-        
+        $users = User::when($this->search, function ($query) {
+            $query->where(function ($q) {
+                $q->where('first_name', 'like', "%{$this->search}%")
+                    ->orWhere('last_name', 'like', "%{$this->search}%");
+            });
+        })
+            ->paginate(10)
+            ->onEachSide(1);
 
-        return view('users.index', compact(['users'] ));
+
+
+        return view('users.index', ['users' => $users]);
+    }
+
+    public function show(User $user)
+    {
+
+
+
+
+        return view('users.show-user', compact(['user', ]));
     }
 
     public function store(Request $request)

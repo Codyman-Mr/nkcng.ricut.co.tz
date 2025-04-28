@@ -7,6 +7,14 @@ use App\Http\Controllers\LoanController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Reports;
+use App\Http\Controllers\TestingController;
+use App\Http\Controllers\LoanPackageController;
+use App\Http\Controllers\GpsController;
+use App\Models\Loan;
+use Illuminate\Http\Request;
+use App\Models\DeviceLocation;
+use App\Events\LocationUpdated;
+use App\Http\Controllers\LocationController;
 
 Route::get('/', [AuthController::class, 'dashboard'])->middleware('auth');
 
@@ -31,7 +39,7 @@ Route::get('/show-loan/{loan}', [LoanController::class, 'show'])->name('show-loa
 
 
 
-
+Route::get('loan-packages', [LoanPackageController::class, 'index'])->name('loan-packages')->middleware('auth');
 Route::get('/loan-payments/{loan}', [PaymentController::class, 'index'])->name('loan-payments')->middleware('auth');
 Route::get('/repayment-alerts', [PaymentController::class, 'repaymentAlerts'])->name('repayment-alerts')->middleware('auth');
 Route::post('/send-repayment-reminders', [PaymentController::class, 'sendRepaymentReminders'])->middleware('auth');
@@ -43,6 +51,11 @@ Route::get('/report', [Reports::class, 'index'])->name('report')->middleware('au
 
 
 Route::get('/users', [UserController::class, 'index'])->name('users')->middleware('auth');
+Route::get('/show-user/{user}',[UserController::class,'show'])->name('show-user')->middleware('auth');
 Route::post('/store-user', [UserController::class, 'store'])->middleware('auth');
 Route::put('/update-user/{user}', [UserController::class, 'update'])->name('update-user')->middleware('auth');
 Route::delete('/delete-user/{user}', [UserController::class , 'destroy'])->name('delete-user')->middleware('auth');
+
+
+Route::get('/testing', [TestingController::class,'index'])->name('testing')->middleware('auth');
+

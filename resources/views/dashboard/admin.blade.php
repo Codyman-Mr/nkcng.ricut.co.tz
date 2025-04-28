@@ -1,20 +1,21 @@
+@php
+    use Carbon\Carbon;
+@endphp
+
 @section('main-content')
-
-
-    <div class="bg-gray-200 rounded-md shadow-md">
+    <div class=" bg-transparent rounded-md">
         <main class="content px-2 py-4">
             <div class="container-fluid">
                 <div class="mb-3">
-                    <h3 class="fw-bold fs-4 mb-3">Hello {{ Auth::user()->first_name }} {{ Auth::user()->last_name }},</h3>
 
                     <div
-                        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-flow-row grid-rows-auto gap-2.5">
+                        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-flow-row grid-rows-auto gap-2.5 ">
                         <!-- Card 1 -->
                         <div class="sm:col-span-1">
-                            <div class="flex flex-col rounded-2xl w-full bg-[#ffffff] shadow-xl">
+                            <div class="flex flex-col rounded-md w-full  shadow-l border border-gray-300">
                                 <div class="flex flex-col p-4">
-                                    <span class="flex justify-between items-center pb-1 border-b border-gray-300">
-                                        <div class="text-md font-bold text-[#374151] ">Total Amount</div>
+                                    <span class="flex justify-between items-center pb-1 border-b border-nkgreen">
+                                        <div class="text-sm font-bold text-[#374151] ">Total Amount</div>
                                         <img src="{{ asset('svg/money-stack.svg') }}" alt="money stack"
                                             class="w-8 h-8 object-cover">
                                     </span>
@@ -27,10 +28,10 @@
 
                         <!-- Card 2 -->
                         <div class="sm:col-span-1">
-                            <div class="flex flex-col rounded-2xl w-full bg-[#ffffff] shadow-xl">
+                            <div class="flex flex-col rounded-md w-full border border-gray-300 shadow-l">
                                 <div class="flex flex-col p-4">
-                                    <span class="flex justify-between items-center pb-1 border-b border-gray-300">
-                                        <div class="text-md font-bold text-[#374151] ">Paid Amount</div>
+                                    <span class="flex justify-between items-center pb-1 border-b border-nkgreen">
+                                        <div class="text-sm font-bold text-[#374151] ">Paid Amount</div>
                                         <img src="{{ asset('svg/money-in.svg') }}" alt="money in"
                                             class="w-8 h-8 object-cover">
                                     </span>
@@ -44,10 +45,10 @@
 
                         <!-- Card 3 -->
                         <div class="sm:col-span-1">
-                            <div class="flex flex-col rounded-2xl w-full bg-[#ffffff] shadow-xl">
+                            <div class="flex flex-col rounded-md w-full border border-gray-300 shadow-sm">
                                 <div class="flex flex-col p-4">
-                                    <span class="flex justify-between items-center pb-1 border-b border-gray-300">
-                                        <div class="text-md font-bold text-[#374151] ">Due Amount</div>
+                                    <span class="flex justify-between items-center pb-1 border-b border-nkgreen">
+                                        <div class="text-sm font-bold text-[#374151] ">Due Amount</div>
                                         <img src="{{ asset('svg/money-out.svg') }}" alt="money out"
                                             class="w-8 h-8 object-cover">
                                     </span>
@@ -61,10 +62,10 @@
 
                         <!-- Card 4 -->
                         <div class="sm:col-span-1 md:col-start-1 md:row-start-2">
-                            <div class="flex flex-col rounded-2xl w-full bg-[#ffffff] shadow-xl">
+                            <div class="flex flex-col rounded-md w-full border border-gray-300 shadow-l">
                                 <div class="flex flex-col p-4">
-                                    <span class="flex justify-between items-center pb-1 border-b border-gray-300">
-                                        <div class="text-md font-bold text-[#374151] ">All Users</div>
+                                    <span class="flex justify-between items-center pb-1 border-b border-nkgreen">
+                                        <div class="text-sm font-bold text-[#374151] ">All Users</div>
                                         <img src="{{ asset('svg/users-many.svg') }}" alt="many users"
                                             class="w-8 h-8 object-cover">
                                     </span>
@@ -79,14 +80,14 @@
 
                         <!-- Card 5 -->
                         <div class="sm:col-span-1 md:col-start-2 md:row-start-2">
-                            <div class="flex flex-col rounded-2xl w-full bg-[#ffffff] shadow-xl">
+                            <div class="flex flex-col rounded-md w-full border border-gray-300 shadow-l">
                                 <div class="flex flex-col p-4">
-                                    <span class="flex justify-between items-center pb-1 border-b border-gray-300">
-                                        <div class="text-md font-bold text-[#374151] ">Customers with Loans</div>
+                                    <span class="flex justify-between items-center pb-1 border-b border-nkgreen">
+                                        <div class="text-sm font-bold text-[#374151] ">Customers with Loans</div>
                                         <img src="{{ asset('svg/user-not-paid.svg') }}" alt="loan"
                                             class="w-8 h-8 object-cover ">
                                     </span>
-                                    <div class="text-2xl fw-bold text-[#374151] py-4">
+                                    <div class="text-xl fw-bold text-[#374151] py-4">
                                         @php
                                             $count = 0;
 
@@ -112,10 +113,10 @@
 
                         <!-- Card 6 -->
                         <div class="sm:col-span-1 md:col-start-3 md:row-start-2">
-                            <div class="flex flex-col rounded-2xl w-full bg-[#ffffff] shadow-xl">
+                            <div class="flex flex-col rounded-md w-full border border-gray-300 shadow-l">
                                 <div class="flex flex-col p-4">
-                                    <span class="flex justify-between items-center pb-1 border-b border-gray-300">
-                                        <div class="text-md font-bold text-[#374151] ">Fully Paid Customers</div>
+                                    <span class="flex justify-between items-center pb-1 border-b border-nkgreen">
+                                        <div class="text-sm font-bold text-[#374151] ">Fully Paid Customers</div>
                                         <img src="{{ asset('svg/user-paid.svg') }}" alt="paid user"
                                             class="w-8 h-8 filter-green">
                                     </span>
@@ -147,18 +148,16 @@
                         </div>
 
                         <div
-                            class="sm:col-span-2 md:col-span-2 lg:col-span-2 lg:col-start-4 lg:row-span-2 lg:row-start-1 border border-gray-400 rounded-2xl flex flex-col justify-between bg-[#ffffff] shadow-xl">
+                            class="sm:col-span-2 md:col-span-2 lg:col-span-2 lg:col-start-4 lg:row-span-2 lg:row-start-1 border border-gray-400 rounded-2xl flex flex-col justify-between  shadow-sm">
                             <!-- Map Container -->
                             <div id="map"
-                                class="flex flex-col rounded-2xl w-full h-[90%] p-1  shadow-sm cursor-pointer transition-all duration-500 ease-in-out"
+                                class="flex flex-col rounded-sm w-full h-[90%] p-1  shadow-sm cursor-pointer transition-all duration-500 ease-in-out"
                                 onclick="toggleMapSize(event)">
                                 <!-- Map content goes here -->
                             </div>
 
-                            <!-- Text Container -->
-                            <div class="text-2xl fw-bold font-bold text-[#374151] pb-1 pt-2 text-center">
-                                Map showing Users in Real-time
-                            </div>
+
+
                         </div>
                         <div class="backdrop" onclick="toggleMapSize(event)"></div>
 
@@ -166,48 +165,99 @@
 
                 </div>
 
-                <h3 class="fw-bold fs-4 my-8  border-gray-900">payments this week</h3>
 
                 <div class="row">
                     <div class="col-12">
-                        <h5 class="mb-2 fw-bold">Customers with Near Loan End Date</h5>
                         @if ($nearEndLoans->isEmpty())
                             <p>No loans nearing end date.</p>
                         @else
-                            <table class="table table-striped text-sm" style="width: 100%;">
-                                <thead class="text-xs bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">Name
-                                        </th>
-                                        <th scope="col" class="px-6 py-3" style="width: 15rem; font-weight:600;">Required
-                                            Amount</th>
-                                        <th scope="col" class="px-6 py-3" style="width: 15rem; font-weight:600;">Pending
-                                            Amount</th>
-                                        <th scope="col" class="px-6 py-3" style="width: 10rem; font-weight:600;">Days
-                                            Remaining</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($nearEndLoans as $loan)
-                                        <tr class="bg-white border-b">
-                                            <td class="py-4">{{ $loan->user->first_name }} {{ $loan->user->last_name }}
-                                            </td>
-                                            <td class="py-4">{{ number_format($loan->loan_required_amount) }} Tsh</td>
-                                            <td class="py-4">
-                                                {{ number_format($loan->loan_required_amount - $loan->payments->sum('paid_amount')) }}
-                                                Tsh</td>
-                                            <td class="py-4">
-                                                @php
-                                                    $daysRemaining = \Carbon\Carbon::now()->diffInDays(
-                                                        $loan->loan_end_date,
-                                                    );
-                                                @endphp
-                                                {{ $daysRemaining }} Days
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                            <div class="mt-1">
+                                <section class="py-3 sm:py-5">
+                                    <div class=" border border-gray-300 rounded-md ">
+                                        <div class=" overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
+                                            <div
+                                                class="flex flex-col px-4 py-3 space-y-3 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 lg:space-x-4">
+                                                <div class="flex items-center flex-1 space-x-4">
+                                                    <h5 class="mb-2 fw-bold">Customers with Near Loan End Date</h5>
+                                                </div>
+                                            </div>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+
+                                                    <thead
+                                                        class="text-xs text-gray-700 uppercase bg-gray-100  dark:bg-gray-700 dark:text-gray-400">
+                                                        <tr>
+
+                                                            <th scope="col" class="px-4 py-3">Name</th>
+                                                            <th scope="col" class="px-4 py-3">Required</th>
+                                                            <th scope="col" class="px-4 py-3">Pending Amount</th>
+                                                            <th scope="col" class="px-4 py-3">Days Remaining</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach ($nearEndLoans as $loan)
+                                                            <tr
+                                                                class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+
+                                                                {{-- name --}}
+                                                                <td class="w-auto px-2 py-3">
+                                                                    <span
+                                                                        class="bg-primary-100 text-primary-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
+                                                                        {{ $loan->user->first_name }}
+                                                                        {{ $loan->user->last_name }}
+                                                                    </span>
+                                                                </td>
+
+                                                                {{-- loan required amount --}}
+                                                                <td class="w-auto px-2 py-3">
+                                                                    {{ number_format($loan->loan_required_amount) }} Tsh
+                                                                </td>
+
+                                                                {{-- loan amount --}}
+                                                                <td class="w-auto px-2 py-3">
+                                                                    {{ number_format($loan->loan_required_amount - $loan->payments->sum('paid_amount')) }}
+                                                                    Tsh</td>
+                                                                {{-- days remaining --}}
+                                                                <td class="w-auto px-6 py-3 flex items-center">
+                                                                    <div class="flex items-center">
+                                                                        @php
+
+                                                                            $now = Carbon::now();
+                                                                            $daysRemaining = $now->floatDiffInDays(
+                                                                                $loan->loan_end_date,
+                                                                                true,
+                                                                            );
+
+                                                                            if ($daysRemaining < 1) {
+                                                                                $hours = round($daysRemaining * 24);
+                                                                                echo $hours . ' hours';
+                                                                            } else {
+                                                                                $days = round($daysRemaining);
+                                                                                echo $days .
+                                                                                    ' day' .
+                                                                                    ($days !== 1 ? 's' : '');
+                                                                            }
+                                                                        @endphp
+                                                                    </div>
+                                                                </td>
+
+                                                            </tr>
+                                                        @endforeach
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <!-- Pagination Links -->
+                                            <div class="my-4 ">
+                                                {{ $nearEndLoans->onEachSide(1)->links() }}
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </section>
+
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -259,24 +309,57 @@
             display: block;
             /* Show the backdrop when the map is expanded */
         }
+
+        #marker {
+            background-image: url('https://docs.mapbox.com/mapbox-gl-js/assets/washington-monument.jpg');
+            background-size: cover;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .mapboxgl-popup {
+            max-width: 200px;
+        }
     </style>
 
     <!-- Initialize Map and Toggle Expanded State -->
     <script>
         mapboxgl.accessToken =
             'pk.eyJ1IjoibWljaGFlbG1nb25kYXNyIiwiYSI6ImNtNXIwZHV0dDA1aDgyanIxaDd4OGQ2cWsifQ.wmLJmRnEG8S46PXSGajvSg';
+
+
+        const position = [39.241196125639995, -6.774418233335669];
+
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/streets-v12',
-            center: [39.241196125639995, -6.774418233335669],
+            center: position,
             zoom: 15
         });
 
-        new mapboxgl.Marker({
-                color: 'red'
-            })
-            .setLngLat([39.241196125639995, -6.774418233335669])
-            .addTo(map);
+        const popup = new mapboxgl.popup({
+            offset: 25
+        }).set.Text(
+            'This is the location of the customer'
+        );
+
+        const el = document.createElement('div');
+        el.id = 'marker';
+
+
+
+        // new mapboxgl.Marker({
+        //         color: 'red'
+        //     })
+        //     .setLngLat(position)
+        //     .addTo(map);
+
+         new mapboxgl.Marker(el)
+        .setLngLat(position)
+        .setPopup(popup) // sets a popup on this marker
+        .addTo(map);
 
         // map.addControl(
         //     new MapboxDirections({

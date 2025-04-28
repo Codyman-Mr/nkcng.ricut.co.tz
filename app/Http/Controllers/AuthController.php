@@ -13,32 +13,46 @@ use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller
 {
+
+    public $loan;
+
+    public function mount()
+    {
+        // Fetch the loan for the logged-in user
+        $this->loan = Loan::where('user_id', Auth::id())->first();
+    }
+
     public function dashboard()
     {
-        
+
         // Get all payments with their associated loans
         $payments = Payment::with('loan')->get();
-    
+
         // Get the current logged-in user and load their loans
-        $user = Auth::user()->load('loans');
-    
+        $user = User::with('loans')->find(Auth::id());
+
         // Calculate total loan amount for all users
         $totalLoanAmount = Loan::sum('loan_required_amount');
-    
+
         // Fetch all users with their loans and payments
         $users = User::with('loans.payments')->get();
-    
+
+        $loan = $this->loan;
+
+        // statuses
+
+
         // Fetch loans that are near their end date
         $nearEndLoans = Loan::whereNotNull('loan_end_date') // Ensure the end date exists
-                            ->whereDate('loan_end_date', '>', now()) // Filter loans with end date in the future
-                            ->orderBy('loan_end_date', 'asc') // Sort by nearest end date
-                            ->take(12) // Limit to 12 records
-                            ->with('user') // Include the user associated with the loan
-                            ->get();
-    
-        return view('dashboard.index', compact('payments', 'user', 'totalLoanAmount', 'users', 'nearEndLoans'));
+            ->whereDate('loan_end_date', '>', now()) // Filter loans with end date in the future
+            ->orderBy('loan_end_date', 'asc') // Sort by nearest end date
+            ->take(12) // Limit to 12 records
+            ->with('user') // Include the user associated with the loan
+            ->paginate(10);
+
+        return view('dashboard.index', compact('payments', 'user', 'totalLoanAmount', 'users', 'nearEndLoans', 'loan'));
     }
-    
+
 
     public function registrationPage()
     {
@@ -78,12 +92,12 @@ class AuthController extends Controller
             'Content-Type' => 'application/x-www-form-urlencoded',
             'apiKey' => $apiKey,
         ])->asForm()->post('https://api.africastalking.com/version1/messaging', [
-            'username' => $username,
-            'to' => $phoneNumber,
-            'from' => 'NK CNG',
-            'message' => "Your verification code is {$verification_code}",
-            'enqueue' => $enqueue,
-        ]);
+                    'username' => $username,
+                    'to' => $phoneNumber,
+                    'from' => 'NK CNG',
+                    'message' => "Your verification code is {$verification_code}",
+                    'enqueue' => $enqueue,
+                ]);
 
         if ($response->successful()) {
             $user = User::create([
@@ -130,7 +144,7 @@ class AuthController extends Controller
             'status' => 'verified'
         ]);
 
-        auth()->login($user);
+        Auth::login($user);
         Session::forget('user_id');
 
         return redirect('/welcome-page')->with('message', 'User Verified and Logged In');
@@ -174,7 +188,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        auth()->logout();
+        Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

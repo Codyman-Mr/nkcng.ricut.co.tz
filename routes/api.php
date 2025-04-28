@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\LocationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -13,3 +14,5 @@ Route::get('/trial', function (Request $request) {
 });
 
 Route::post('/pay-loan', [PaymentController::class, 'loanPayment']);
+
+Route::post('/location/update', [LocationController::class, 'update']);

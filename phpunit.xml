@@ -5,13 +5,13 @@
          colors="true"
 >
     <testsuites>
-        <testsuite name="Unit">
-            <directory>tests/Unit</directory>
-        </testsuite>
-        <testsuite name="Feature">
-            <directory>tests/Feature</directory>
-        </testsuite>
-    </testsuites>
+    <testsuite name="Unit">
+        <directory suffix="Test.php">./tests/Unit</directory>
+    </testsuite>
+    <testsuite name="Feature">
+        <directory suffix="Test.php">./tests/Feature</directory>
+    </testsuite>
+</testsuites>
     <source>
         <include>
             <directory>app</directory>

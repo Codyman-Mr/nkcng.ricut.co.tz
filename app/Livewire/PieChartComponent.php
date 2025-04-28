@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Http\Livewire;
 
 use Livewire\Component;
 
@@ -8,7 +8,7 @@ class PieChartComponent extends Component
 {
     public $chartOptions;
     public $chartSeries;
-    
+
     public function mount()
     {
 

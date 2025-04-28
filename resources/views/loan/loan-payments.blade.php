@@ -7,7 +7,7 @@
 
 <meta name="csrf-token" content="{{csrf_token()}}">
 
-@section('content')
+@section('main-content')
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-sm-5">
         <h2 class=""><span class="font-weight-bold">{{$loan->installation->customerVehicle->user->first_name}} {{$loan->installation->customerVehicle->user->last_name}}</span></h2>
@@ -158,7 +158,7 @@
                         <label for="exampleFormControlTextarea1">Payment Descriptions</label>
                         <textarea class="form-control" id="payment_description" rows="3" name="payment_description"></textarea>
                 </div>
-                      
+
                 </div>
 
                 <div class="row">
