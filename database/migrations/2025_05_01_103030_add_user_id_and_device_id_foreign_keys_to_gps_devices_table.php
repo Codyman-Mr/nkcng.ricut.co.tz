@@ -9,15 +9,11 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    // In the migration file
-    public function up()
+    public function up(): void
     {
-        Schema::table('udp_messages', function (Blueprint $table) {
-            $table->dropColumn('data');
-            $table->decimal('latitude', 10, 6);
-            $table->decimal('longitude', 10, 6);
-        });
+       //
     }
+
     /**
      * Reverse the migrations.
      */

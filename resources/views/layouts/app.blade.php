@@ -70,10 +70,12 @@
                         <i class="bi bi-person-fill text-lg"></i>
                         <span class="ml-3 text-sm">Users</span>
                     </a>
-                    {{-- <a href="/testing" class="flex items-center px-3 py-2 rounded transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-gray-700 {{ isActive('/loans-ongoing') }}">
+
+                    <!-- comant this after -->
+                    <a href="/testing" class="flex items-center px-3 py-2 rounded transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-gray-700 {{ isActive('/loans-ongoing') }}">
                         <i class="bi bi-wrench-adjustable text-lg"></i>
                         <span class="ml-3 text-sm">Testing</span>
-                    </a> --}}
+                    </a>
                 @endif
             </nav>
 

@@ -147,19 +147,20 @@
                             </div>
                         </div>
 
+
+
+
+
                         <div
-                            class="sm:col-span-2 md:col-span-2 lg:col-span-2 lg:col-start-4 lg:row-span-2 lg:row-start-1 border border-gray-400 rounded-2xl flex flex-col justify-between  shadow-sm">
-                            <!-- Map Container -->
+                            class="sm:col-span-2 md:col-span-3 lg:col-span-2 lg:col-start-4 lg:row-span-2 lg:row-start-1 border border-gray-400 rounded-2xl flex flex-col justify-between shadow-sm">
                             <div id="map"
-                                class="flex flex-col rounded-sm w-full h-[90%] p-1  shadow-sm cursor-pointer transition-all duration-500 ease-in-out"
+                                class="flex flex-col rounded-sm w-full h-64 sm:h-80 md:h-96 lg:h-[90%] p-1 shadow-sm cursor-pointer transition-all duration-500 ease-in-out"
                                 onclick="toggleMapSize(event)">
                                 <!-- Map content goes here -->
                             </div>
-
-
-
                         </div>
                         <div class="backdrop" onclick="toggleMapSize(event)"></div>
+
 
                     </div>
 
@@ -273,22 +274,33 @@
     </main>
 
     </div>
-    <!-- Expanded Style and Backdrop -->
     <style>
         .expanded {
             position: fixed;
             top: 50%;
-            /* Move the top edge to the middle of the screen */
-            left: 55%;
-            /* Move the left edge to the middle of the screen */
+            left: 50%;
             transform: translate(-50%, -50%);
-            /* Shift the map back by 50% of its own width and height */
             width: 70vw;
-            /* 70% of viewport width */
-            height: 70vh;
-            /* 70% of viewport height */
+            /* Increase width on smaller screens */
+            height: 80vh;
+            /* Increase height for better coverage */
+            min-height: 400px;
+            /* Ensure a minimum height on very small screens */
+            max-height: 80vh;
+            /* Prevent overflow on smaller screens */
             z-index: 1000;
-            /* Ensure the map is on top of other elements */
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 640px) {
+            .expanded {
+                width: 95vw;
+                /* Almost full width on small screens */
+                height: 85vh;
+                /* Slightly less height to account for browser UI */
+                min-height: 350px;
+            }
         }
 
         .backdrop {
@@ -298,16 +310,12 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            /* Semi-transparent black */
             z-index: 999;
-            /* Ensure the backdrop is below the map */
             display: none;
-            /* Hidden by default */
         }
 
         .expanded+.backdrop {
             display: block;
-            /* Show the backdrop when the map is expanded */
         }
 
         #marker {
@@ -322,13 +330,17 @@
         .mapboxgl-popup {
             max-width: 200px;
         }
+
+        /* Ensure the map container inside .expanded takes full height */
+        .expanded #map {
+            height: 100% !important;
+            width: 100% !important;
+        }
     </style>
 
-    <!-- Initialize Map and Toggle Expanded State -->
     <script>
         mapboxgl.accessToken =
             'pk.eyJ1IjoibWljaGFlbG1nb25kYXNyIiwiYSI6ImNtNXIwZHV0dDA1aDgyanIxaDd4OGQ2cWsifQ.wmLJmRnEG8S46PXSGajvSg';
-
 
         const position = [39.241196125639995, -6.774418233335669];
 
@@ -339,34 +351,17 @@
             zoom: 15
         });
 
-        const popup = new mapboxgl.popup({
+        const popup = new mapboxgl.Popup({
             offset: 25
-        }).set.Text(
-            'This is the location of the customer'
-        );
+        }).setText('This is the location of the customer');
 
         const el = document.createElement('div');
         el.id = 'marker';
 
-
-
-        // new mapboxgl.Marker({
-        //         color: 'red'
-        //     })
-        //     .setLngLat(position)
-        //     .addTo(map);
-
-         new mapboxgl.Marker(el)
-        .setLngLat(position)
-        .setPopup(popup) // sets a popup on this marker
-        .addTo(map);
-
-        // map.addControl(
-        //     new MapboxDirections({
-        //         accessToken: mapboxgl.accessToken
-        //     }),
-        //     'top-right'
-        // );
+        new mapboxgl.Marker(el)
+            .setLngLat(position)
+            .setPopup(popup)
+            .addTo(map);
 
         map.addControl(new mapboxgl.NavigationControl());
 
@@ -381,14 +376,42 @@
             mapContainer.classList.toggle('expanded');
             backdrop.style.display = mapContainer.classList.contains('expanded') ? 'block' : 'none';
 
-            // Resize the map to fit the new container size
-            if (mapContainer.classList.contains('expanded')) {
-                map.resize();
-            }
-
             // Stop event propagation to avoid triggering the backdrop click listener immediately
             event.stopPropagation();
+
+            // Force a repaint and resize
+            if (mapContainer.classList.contains('expanded')) {
+                // Add a small delay to ensure the CSS transition completes
+                setTimeout(() => {
+                    mapContainer.style.height = '100%'; // Force height to match parent
+                    mapContainer.style.width = '100%'; // Force width to match parent
+                    map.resize();
+                    // Force a repaint of the map canvas
+                    map.triggerRepaint();
+                }, 300); // Match the transition duration in CSS
+            } else {
+                // Reset to original size and resize immediately
+                adjustMapHeight();
+                map.resize();
+            }
         }
+
+        function adjustMapHeight() {
+            const cards = document.querySelectorAll('.flex.flex-col.rounded-md');
+            const map = document.getElementById('map');
+            const cardHeight = cards[0]?.offsetHeight || 300; // Fallback height
+            if (!map.classList.contains('expanded')) {
+                map.style.height = `${cardHeight}px`;
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            adjustMapHeight();
+            if (document.getElementById('map').classList.contains('expanded')) {
+                setTimeout(() => map.resize(), 300);
+            }
+        });
+        window.addEventListener('load', adjustMapHeight);
 
         // Detect clicks outside the map to return it to its original size
         document.addEventListener('click', function(event) {
@@ -398,6 +421,8 @@
             if (mapContainer.classList.contains('expanded') && !mapContainer.contains(event.target)) {
                 mapContainer.classList.remove('expanded');
                 backdrop.style.display = 'none';
+                adjustMapHeight();
+                map.resize();
             }
         });
     </script>

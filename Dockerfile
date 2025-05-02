@@ -13,10 +13,11 @@ RUN apt-get update && apt-get install -y \
     nginx \
     supervisor \
     nodejs \
-    npm
+    npm\
+    libpq-dev
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath pdo_pgsql pgsql
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

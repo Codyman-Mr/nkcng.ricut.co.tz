@@ -24,5 +24,9 @@ class Installation extends Model
         return $this->hasOne(Loan::class);
     }
 
-    protected $guarded = [];
+    protected $fillable = [
+        'customer_vehicle_id',
+        'cylinder_type_id',
+
+    ];
 }

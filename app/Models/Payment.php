@@ -14,5 +14,12 @@ class Payment extends Model
         return $this->belongsTo(Loan::class);
     }
 
-    protected $guarded = [];
+    protected $fillable = [
+        'loan_id',
+        'users_id',
+        'payment_date',
+        'paid_amount',
+        'payment_method',
+        'payment_description',
+    ];
 }

@@ -252,14 +252,14 @@
                                                                                 $color_class =
                                                                                     'text-green-700 bg-green-100 dark:bg-green-700 dark:text-green-100';
                                                                             } elseif (
-                                                                                $time_left->invert == 1 &&
+                                                                                $time_left->invert == 0 &&
                                                                                 $paid_amount < $loan_amount
                                                                             ) {
                                                                                 $status = 'ongoing';
                                                                                 $color_class =
                                                                                     'text-yellow-700 bg-yellow-100 dark:bg-yellow-700 dark:text-yellow-100';
                                                                             } elseif (
-                                                                                $time_left->invert == 0 &&
+                                                                                $time_left->invert == 1 &&
                                                                                 $paid_amount < $loan_amount
                                                                             ) {
                                                                                 $status = 'overdue';
@@ -382,6 +382,8 @@
                                                                                             onclick='$("#createModal").modal(`show`)'>
                                                                                             Add Payment
                                                                                         </x-button.outline>
+
+
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -436,6 +438,8 @@
                 </div>
             </div>
         </div>
+
+       
     </div>
 
 
@@ -610,4 +614,3 @@
     </script>
 
 </div>
-

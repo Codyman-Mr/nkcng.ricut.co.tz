@@ -26,14 +26,14 @@ class UserFactory extends Factory
         return [
             'first_name' => fake()->name(),
             'last_name'=> fake()->name(),
-            'phone_number' => fake()->phoneNumber(),
-            // 'gender' => fake()->gender(),
-            'dob' => fake()->date(),
-            'nida_number' => fake()->randomNumber(9),
+            'phone_number' => fake()->numerify('07########'),
+ 'gender' => fake()->randomElement(['male', 'female']), 
+'dob' => fake()->dateTimeBetween('-80 years', '-18 years')->format('Y-m-d'),           
+'nida_number' => fake()->numerify('####################'), 
             'address' => fake()->address(),
 
             'password' => bcrypt('password'),
-            'verification_code' => fake()->randomNumber(6),
+            'verification_code' => fake()->numberBetween(100000, 999999),
         ];
     }
 

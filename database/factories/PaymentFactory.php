@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Payment;
 use App\Models\Loan;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -25,9 +26,11 @@ class PaymentFactory extends Factory
 
         return [
             'loan_id' => $loan->id,
+            'users_id' => User::inRandomOrder()->first()->id,
             'paid_amount' => $this->faker->randomFloat(2, 0, $loan->loan_required_amount), // Random below loan_required_amount
             'payment_date' => $this->faker->dateTimeBetween($loan->loan_start_date, $loan->loan_end_date),
             'payment_method' => $this->faker->randomElement(['cash', 'bank_transfer', 'mobile_money']),
+            'payment_description' => $this-> faker-> randomElement(['paid', 'paid in full', 'on time']),
             'created_at' => now(),
             'updated_at' => now(),
         ];

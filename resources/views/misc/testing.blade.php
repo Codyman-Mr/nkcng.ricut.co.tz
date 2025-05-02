@@ -25,7 +25,7 @@
         <script src="//unpkg.com/alpinejs" defer></script>
  --}}
 
- {{-- <livewire:user-location-tracker :user-id="1" /> --}}
+        {{-- <livewire:user-location-tracker :user-id="1" /> --}}
 
         <livewire:multi-location-tracker :devices="['device1', 'device2', 'device3']" />
 
@@ -35,6 +35,9 @@
                 <livewire:user-location-tracker :user-id="$user->id" />
             </div>
         </div> --}}
+
+
+   
 
     </div>
 

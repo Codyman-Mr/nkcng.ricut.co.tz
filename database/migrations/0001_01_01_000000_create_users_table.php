@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('phone_number')->unique();
             $table->enum('gender', ['male', 'female'])->nullable();
             $table->date('dob')->nullable();
-            $table->string('nida_number')->nullable();
+            $table->string('nida_number', 20)->nullable();
             $table->string('address')->nullable();
             $table->enum('role', ['admin', 'customer'])->default('customer');
             $table->string('password');

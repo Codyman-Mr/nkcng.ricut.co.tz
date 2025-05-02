@@ -59,3 +59,5 @@ Route::delete('/delete-user/{user}', [UserController::class , 'destroy'])->name(
 
 Route::get('/testing', [TestingController::class,'index'])->name('testing')->middleware('auth');
 
+Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
+

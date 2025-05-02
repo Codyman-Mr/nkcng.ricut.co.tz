@@ -26,6 +26,7 @@ class Loan extends Model
         'loan_start_date',
         'loan_end_date',
         'status',
+        'rejection_reason'
     ];
 
     public function getTimeToNextPaymentAttribute()

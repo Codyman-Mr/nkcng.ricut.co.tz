@@ -8,14 +8,15 @@ use App\Models\User;
 
 class CustomerVehicleFactory extends Factory
 {
-    protected $model = CustomerVehicle::class;
+   protected $model = \App\Models\CustomerVehicle::class;
 
     public function definition()
     {
         return [
-            'user_id' => User::inRandomOrder()->first()->id,
+            'user_id' => \App\Models\User::factory(),
+            'imei' => $this->faker->numerify('###########'),
             'model' => $this->faker->word(),
-            'plate_number' => strtoupper($this->faker->bothify('???-####')),
+            'plate_number' => $this->faker->regexify('T-\d{3}-[A-Z0-9]{3}'),
             'vehicle_type' => $this->faker->randomElement(['bajaj', 'car']),
             'fuel_type' => $this->faker->randomElement(['petrol', 'diesel']),
             'created_at' => now(),

@@ -63,7 +63,7 @@
 <script>
     // Theme toggle
     const userPreference = localStorage.getItem('theme');
-    const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const systemPreference = window.matchMedia('(prefers-color-scheme: light)').matches;
     const rootElement = document.documentElement;
 
     if (userPreference === 'dark' || (!userPreference && systemPreference)) {

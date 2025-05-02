@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Location extends Model
 {
-    protected $fillable = ['device_id', 'latitude', 'longitude', 'timestamp'];
+    use HasFactory;
+
+    protected $table = 'locations';
+
     public function gpsDevice()
     {
-        return $this->belongsTo(GpsDevice::class, 'device_id', 'device_id');
+        return $this->hasOne(GpsDevice::class, 'device_id', 'id');
     }
 }

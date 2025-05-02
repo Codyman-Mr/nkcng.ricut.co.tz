@@ -14,6 +14,6 @@ class LoanSeeder extends Seeder
         Loan::factory()->count(100)->create();
 
         // Seed payments for each loan
-        Payment::factory()->count(30)->create();
+        Payment::factory()->count(100)->create();
     }
 }

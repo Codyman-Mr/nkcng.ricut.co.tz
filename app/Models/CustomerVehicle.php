@@ -9,11 +9,6 @@ class CustomerVehicle extends Model
 {
     use HasFactory;
 
-    public function customerVehicle()
-    {
-        return $this->belongsTo(CustomerVehicle::class);
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -28,8 +23,8 @@ class CustomerVehicle extends Model
     {
         return $this->hasOne(CustomerVehicleGps::class, 'imei', 'imei');
     }
-    protected $guarded = [];
 
+    protected $guarded = [];
 
     protected $fillable = [
         'user_id',

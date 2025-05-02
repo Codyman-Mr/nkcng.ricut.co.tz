@@ -99,10 +99,20 @@
                     <span class="text-sm text-red-600">{{ $message }}</span>
                 @enderror
             </div>
+
+            <!-- Loan End Date -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Loan End Date</label>
+                <input type="date" wire:model="loan_end_date"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                @error('loan_end_date')
+                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                @enderror
+            </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex justify-between">
+        <div class="flex justify-between gap-4">
             <button wire:click="openRejectionModal"
                 class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                 Reject Loan
@@ -122,7 +132,7 @@
                     <textarea wire:model.defer="rejection_reason" class="w-full border p-2 rounded-md focus:outline-none focus:ring"
                         rows="4" placeholder="Enter rejection reason..."></textarea>
 
-                   
+
 
                     <div class="mt-4 flex justify-end space-x-2">
                         <button wire:click="$set('showRejectModal', false)"

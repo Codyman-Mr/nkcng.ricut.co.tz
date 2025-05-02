@@ -65,19 +65,6 @@ class LoanApplicationForm extends Component
         ];
     }
 
-    // public function mount($package)
-    // {
-    //     $this->currentStep = 1;
-    //     $this->package = $package;
-
-    //     Log::info('Mount package data', $package);
-
-    //     if (!isset($package['id']) || !isset($package['loan_required_amount'])) {
-    //         Log::error('Invalid package structure', $package);
-    //         session()->flash('error', 'Invalid loan package configuration.');
-    //         return redirect()->to('/');
-    //     }
-    // }
 
 
     public function mount($package)
@@ -137,88 +124,6 @@ class LoanApplicationForm extends Component
         };
     }
 
-    // public function submit()
-    // {
-    //     if (config('app.debug')) {
-    //         DB::enableQueryLog();
-    //     }
-
-    //     Log::info('Package data before submission', $this->package);
-
-    //     if (!isset($this->package['id']) || !isset($this->package['loan_required_amount'])) {
-    //         $this->addError('package', 'Invalid loan package configuration');
-    //         Log::error('Invalid package structure', $this->package);
-    //         return;
-    //     }
-
-    //     Log::info('Submit method triggered');
-
-    //     try {
-    //         Log::info('Starting validation');
-    //         $this->validate();
-    //         Log::info('Validation passed');
-
-    //         DB::beginTransaction();
-    //         Log::info('Database transaction started');
-
-    //         $user = Auth::user();
-    //         Log::info('User retrieved: ' . $user->id);
-
-    //         $existingLoan = Loan::where('user_id', $user->id)
-    //             ->where('status', 'approved')
-    //             ->exists();
-    //         Log::info('Existing loan check: ' . ($existingLoan ? 'Exists' : 'None'));
-
-    //         if ($existingLoan) {
-    //             Log::info('Existing loan found - aborting');
-    //             $this->addError('loan', 'User already has an approved loan.');
-    //             return;
-    //         }
-
-    //         Log::info('Creating vehicle');
-    //         $vehicle = CustomerVehicle::create([
-    //             'user_id' => $user->id,
-    //             'model' => $this->vehicle_name,
-    //             'plate_number' => $this->plate_number,
-    //             'vehicle_type' => $this->vehicle_type,
-    //             'fuel_type' => $this->fuel_type,
-    //         ]);
-    //         Log::info('Vehicle created: ' . $vehicle->id);
-
-    //         Log::info('Creating installation');
-    //         $installation = Installation::create([
-    //             'customer_vehicle_id' => $vehicle->id,
-    //             'cylinder_type_id' => $this->package['id'],
-    //             'status' => 'pending',
-    //             'payment_type' => 'loan',
-    //         ]);
-    //         Log::info('Installation created: ' . $installation->id);
-
-    //         Log::info('Creating loan');
-    //         $loan = Loan::create([
-    //             'user_id' => $user->id,
-    //             'installation_id' => $installation->id,
-    //             'loan_required_amount' => (float) str_replace(',', '', $this->package['loan_required_amount']),
-    //         ]);
-    //         Log::info('Loan created: ' . $loan->id);
-
-    //         DB::commit();
-    //         Log::info('Database transaction committed');
-
-    //         session()->flash('message', 'Loan application submitted successfully!');
-    //         Log::info('Redirecting to home');
-    //         return redirect()->to('/');
-
-    //     } catch (\Exception $e) {
-    //         Log::error('Error occurred: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-    //         DB::rollback();
-    //         session()->flash('error', 'An error occurred while submitting the application.');
-    //     }
-
-    //     if (config('app.debug')) {
-    //         Log::debug('Query log', DB::getQueryLog());
-    //     }
-    // }
 
 
     public function submit()
@@ -285,6 +190,7 @@ class LoanApplicationForm extends Component
                 'user_id' => $user->id,
                 'installation_id' => $installation->id,
                 'loan_required_amount' => (float) str_replace(',', '', $this->package['loan_required_amount']),
+                'status'=> 'pending',
             ]);
             Log::info('Loan created: ' . $loan->id);
 
