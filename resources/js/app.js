@@ -41,9 +41,7 @@ window.Echo.channel('locations').listenToAll((eventName, data) => {
 
 // Maintain state for all devices
 let currentLocations = {
-    device1: { latitude: 37.7749, longitude: -122.4194, timestamp: '2025-04-13T12:00:00Z' },
-    device2: { latitude: 34.0522, longitude: -118.2437, timestamp: '2025-04-13T12:01:00Z' },
-    device3: { latitude: 40.7128, longitude: -74.006, timestamp: '2025-04-13T12:02:00Z' },
+
 };
 
 window.Echo.channel('locations').listen('.LocationUpdated', (event) => {
@@ -60,3 +58,7 @@ window.Echo.channel('locations').listen('.LocationUpdated', (event) => {
 window.Echo.join('locations').here(() => {
     console.log('Joined locations channel');
 });
+
+
+
+resources / js / app.js

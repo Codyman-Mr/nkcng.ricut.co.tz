@@ -12,6 +12,39 @@ use APp\Models\GpsDevice;
 
 class LocationController extends Controller
 {
+    // public function update(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'device_id' => 'required|exists:gps_devices,device_id',
+    //         'latitude' => 'required|numeric',
+    //         'longitude' => 'required|numeric',
+    //         'timestamp' => 'required|date',
+    //     ]);
+
+    //     $mysqlTimestamp = Carbon::parse($validated['timestamp'])->format('Y-m-d H:i:s');
+
+    //     // $device = GpsDevice::where('device_id', $request->device_id)->first();
+
+    //     // $device = GpsDevice::where('device_id', $validated['device_id'])->first();
+
+    //     Location::update([
+    //         'device_id' => $validated['device_id'],
+    //         'latitude' => $validated['latitude'],
+    //         'longitude' => $validated['longitude'],
+    //         'timestamp' => $mysqlTimestamp,
+    //     ]);
+
+    //     Log::info('Firing LocationUpdated event for device: ' . $validated['device_id']);
+    //     event(new LocationUpdated(
+    //         $validated['device_id'],
+    //         $validated['latitude'],
+    //         $validated['longitude'],
+    //         $validated['timestamp']
+    //     ));
+
+    //     return response()->json(['status' => 'success']);
+    // }
+
     public function update(Request $request)
     {
         $validated = $request->validate([
@@ -23,16 +56,24 @@ class LocationController extends Controller
 
         $mysqlTimestamp = Carbon::parse($validated['timestamp'])->format('Y-m-d H:i:s');
 
-        // $device = GpsDevice::where('device_id', $request->device_id)->first();
+        // Find the location entry for this device
+        $location = Location::where('device_id', $validated['device_id'])->first();
 
-        // $device = GpsDevice::where('device_id', $validated['device_id'])->first();
-
-        Location::create([
-            'device_id' => $validated['device_id'],
-            'latitude' => $validated['latitude'],
-            'longitude' => $validated['longitude'],
-            'timestamp' => $mysqlTimestamp,
-        ]);
+        if ($location) {
+            $location->update([
+                'latitude' => $validated['latitude'],
+                'longitude' => $validated['longitude'],
+                'timestamp' => $mysqlTimestamp,
+            ]);
+        } else {
+            // Optionally, create a new record if one doesn't exist
+            Location::create([
+                'device_id' => $validated['device_id'],
+                'latitude' => $validated['latitude'],
+                'longitude' => $validated['longitude'],
+                'timestamp' => $mysqlTimestamp,
+            ]);
+        }
 
         Log::info('Firing LocationUpdated event for device: ' . $validated['device_id']);
         event(new LocationUpdated(
@@ -44,6 +85,7 @@ class LocationController extends Controller
 
         return response()->json(['status' => 'success']);
     }
+
 }
 
 

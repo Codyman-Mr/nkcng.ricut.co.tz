@@ -11,6 +11,18 @@ class Location extends Model
 
     protected $table = 'locations';
 
+    protected $fillable = [
+        'device_id',
+        'latitude',
+        'longitude',
+        'altitude',
+        'speed',
+        'heading',
+        'accuracy',
+        'timestamp',
+
+    ] ;
+
     public function gpsDevice()
     {
         return $this->hasOne(GpsDevice::class, 'device_id', 'id');

@@ -27,7 +27,7 @@
 
         {{-- <livewire:user-location-tracker :user-id="1" /> --}}
 
-        <livewire:multi-location-tracker :devices="['device1', 'device2', 'device3']" />
+        <livewire:multi-location-tracker :devices="['1', '2', '3', '4', '5']" />
 
         {{-- <div x-data="{ open: false }" @click="open = !open">
             <div @click="open = true">Show Tracker</div>
@@ -37,7 +37,7 @@
         </div> --}}
 
 
-   
+
 
     </div>
 
@@ -45,3 +45,6 @@
 
 
 @endsection
+
+
+
