@@ -41,16 +41,17 @@ jobs:
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
         ssh -o StrictHostKeyChecking=no -i private_key $USER@$HOST << 'EOF'
           cd /home/ec2-user/nkcng-2
+          git config --global --add safe.directory /home/ec2-user/nkcng-2  # Add this
           git pull origin qual
           composer install --no-dev --optimize-autoloader --no-interaction
           npm install
           npm run build
-          php artisan config:clear  # Clear cached config
-          php artisan cache:clear   # Clear other caches
+          php artisan config:clear
+          php artisan cache:clear
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
           sudo systemctl restart php-fpm
           sudo systemctl restart nginx
-          sudo systemctl restart supervisord  # Restart Supervisor to pick up changes
+          sudo systemctl restart supervisord
         EOF
