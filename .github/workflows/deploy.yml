@@ -44,7 +44,6 @@ jobs:
           cd /home/ec2-user/nkcng-2
           git pull origin qual  # Match the branch name 'qual'
           composer install --no-dev --optimize-autoloader --no-interaction
-          # php artisan migrate --force  # Uncomment if you need migrations
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
