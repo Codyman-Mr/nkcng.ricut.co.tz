@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - qual  # Trigger on pushes to the main branch
+      - qual  # Trigger on pushes to the 'qual' branch
 
 jobs:
   deploy:
@@ -15,16 +15,18 @@ jobs:
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: 'PHP 8.4.5'  # Adjust to your PHP version
+        php-version: '8.3'  # Use 8.3 (latest stable as of May 2025); adjust if needed
+        tools: composer  # Ensures Composer is available
+      continue-on-error: false  # Fail fast if PHP setup fails
 
     - name: Install Composer dependencies
       run: |
-        composer install --no-dev --optimize-autoloader
+        composer install --no-dev --optimize-autoloader --no-interaction
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18.20.8'  # Adjust to your Node version
+        node-version: '18'  # Use '18' (LTS); 18.20.8 isn’t a valid option here
 
     - name: Install npm dependencies
       run: |
@@ -40,9 +42,9 @@ jobs:
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
         ssh -o StrictHostKeyChecking=no -i private_key $USER@$HOST << 'EOF'
           cd /home/ec2-user/nkcng-2
-          git pull origin main
-          composer install --no-dev --optimize-autoloader
-          # php artisan migrate --force  # Run migrations (remove if not needed)
+          git pull origin qual  # Match the branch name 'qual'
+          composer install --no-dev --optimize-autoloader --no-interaction
+          # php artisan migrate --force  # Uncomment if you need migrations
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
