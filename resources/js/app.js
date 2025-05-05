@@ -61,4 +61,3 @@ window.Echo.join('locations').here(() => {
 
 
 
-resources / js / app.js
