@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - qual  # Trigger on pushes to the 'qual' branch
+      - qual
 
 jobs:
   deploy:
@@ -15,9 +15,8 @@ jobs:
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.3'  # Use 8.3 (latest stable as of May 2025); adjust if needed
-        tools: composer  # Ensures Composer is available
-      continue-on-error: false  # Fail fast if PHP setup fails
+        php-version: '8.3'
+        tools: composer
 
     - name: Install Composer dependencies
       run: |
@@ -26,27 +25,32 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'  # Use '18' (LTS); 18.20.8 isn’t a valid option here
+        node-version: '18'
 
     - name: Install npm dependencies
       run: |
         npm install
-        npm run build  # Builds your frontend assets (e.g., Tailwind)
+        npm run build
 
     - name: Deploy to EC2
       env:
         PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         HOST: ${{ secrets.EC2_HOST }}
-        USER: deploy
+        USER: ec2-user  # Explicitly use ec2-user
       run: |
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
         ssh -o StrictHostKeyChecking=no -i private_key $USER@$HOST << 'EOF'
           cd /home/ec2-user/nkcng-2
-          git pull origin qual  # Match the branch name 'qual'
+          git pull origin qual
           composer install --no-dev --optimize-autoloader --no-interaction
+          npm install
+          npm run build
+          php artisan config:clear  # Clear cached config
+          php artisan cache:clear   # Clear other caches
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
           sudo systemctl restart php-fpm
           sudo systemctl restart nginx
+          sudo systemctl restart supervisord  # Restart Supervisor to pick up changes
         EOF
