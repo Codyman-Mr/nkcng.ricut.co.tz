@@ -42,6 +42,8 @@ jobs:
         ssh -o StrictHostKeyChecking=no -i private_key $USER@$HOST << 'EOF'
           cd /home/ec2-user/nkcng-2
           git config --global --add safe.directory /home/ec2-user/nkcng-2
+          git fetch origin qual
+          git reset --hard origin/qual  # Overwrite local changes
           git pull origin qual
           composer install --no-dev --optimize-autoloader --no-interaction
           npm install
