@@ -5,6 +5,10 @@ import Pusher from 'pusher-js';
 window.Pusher = Pusher;
 // resources/js/app.js
 // resources/js/app.js
+
+
+console.log('VITE_REVERB_HOST:', import.meta.env.VITE_REVERB_HOST)
+
 console.log('Echo initialized with:', {
     key: import.meta.env.VITE_REVERB_APP_KEY,
     host: import.meta.env.VITE_REVERB_HOST,

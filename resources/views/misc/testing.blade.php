@@ -29,9 +29,6 @@
 
         <livewire:multi-location-tracker :devices="['1', '2', '3', '4', '5']" />
 
-        <h1>
-            testing deploying to production
-        </h1>
 
         {{-- <div x-data="{ open: false }" @click="open = !open">
             <div @click="open = true">Show Tracker</div>
