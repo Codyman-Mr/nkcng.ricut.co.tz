@@ -43,7 +43,7 @@ jobs:
           cd /home/ec2-user/nkcng-2
           git config --global --add safe.directory /home/ec2-user/nkcng-2
           git fetch origin qual
-          git reset --hard origin/qual  # Overwrite local changes
+          git reset --hard origin/qual
           git pull origin qual
           composer install --no-dev --optimize-autoloader --no-interaction
           npm install
