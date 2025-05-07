@@ -9,15 +9,22 @@ export default defineConfig({
         }),
     ],
     build: {
-        manifest: true, // Required for Laravel to find assets in production
-        outDir: 'public/build', // Default; just to be explicit
-        emptyOutDir: true, // Clean the output directory before building
-        sourcemap: false, // Disable source maps for production
-        minify: 'terser', // Use Terser for minification
+        manifest: true,
+        outDir: 'public/build',
+        assetsDir: 'assets', // stays default
+        emptyOutDir: true,
+        sourcemap: false,
+        minify: 'terser',
         rollupOptions: {
             input: {
                 app: 'resources/js/app.js',
                 style: 'resources/sass/app.scss',
+            },
+            output: {
+                entryFileNames: 'assets/[name].[hash].js',
+                chunkFileNames: 'assets/[name].[hash].js',
+                assetFileNames: 'assets/[name].[hash][extname]',
+                // Remove this if you're not using code splitting
             },
         },
     },
