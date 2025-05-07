@@ -5,11 +5,11 @@
 
 
 
-// console.log('VITE_REVERB_HOST:', reverbHost)
+// console.log('VITE_REVERB_HOST:', import.meta.env.VITE_REVERB_HOST)
 
 // console.log('Echo initialized with:', {
 //     key: import.meta.env.VITE_REVERB_APP_KEY,
-//     host: reverbHost,
+//     host: import.meta.env.VITE_REVERB_HOST,
 //     port: import.meta.env.VITE_REVERB_PORT,
 //     scheme: import.meta.env.VITE_REVERB_SCHEME,
 // });
@@ -17,7 +17,7 @@
 // window.Echo = new Echo({
 //     broadcaster: 'reverb',
 //     key: import.meta.env.VITE_REVERB_APP_KEY,
-//     wsHost: reverbHost || '127.0.0.1',
+//     wsHost: import.meta.env.VITE_REVERB_HOST || '127.0.0.1',
 //     wsPort: import.meta.env.VITE_REVERB_PORT || 8080,
 //     wssPort: import.meta.env.VITE_REVERB_PORT || 8080,
 //     forceTLS: false,
@@ -72,7 +72,7 @@ window.Pusher = Pusher;
 
 // console.log('Environment variables:', {
 //     key: import.meta.env.VITE_REVERB_APP_KEY,
-//     host: reverbHost,
+//     host: import.meta.env.VITE_REVERB_HOST,
 //     port: import.meta.env.VITE_REVERB_PORT,
 //     scheme: import.meta.env.VITE_REVERB_SCHEME,
 // });
@@ -84,14 +84,14 @@ console.log('Environment variables:', {
     scheme: import.meta.env.VITE_REVERB_SCHEME,
 });
 
-if (!reverbHost) {
+if (!import.meta.env.VITE_REVERB_HOST) {
     console.error('VITE_REVERB_HOST is not defined in .env');
 }
 
 window.Echo = new Echo({
     broadcaster: 'reverb',
     key: import.meta.env.VITE_REVERB_APP_KEY,
-    wsHost: reverbHost,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
     wsPort: import.meta.env.VITE_REVERB_PORT || 8080,
     wssPort: import.meta.env.VITE_REVERB_PORT || 8080,
     forceTLS: import.meta.env.VITE_REVERB_SCHEME === 'wss',
@@ -100,7 +100,7 @@ window.Echo = new Echo({
 });
 
 window.Echo.connector.pusher.connection.bind('connected', () => {
-    console.log(`Connected to Reverb WebSocket at ${import.meta.env.VITE_REVERB_SCHEME}://${reverbHost}:${import.meta.env.VITE_REVERB_PORT}`);
+    console.log(`Connected to Reverb WebSocket at ${import.meta.env.VITE_REVERB_SCHEME}://${import.meta.env.VITE_REVERB_HOST}:${import.meta.env.VITE_REVERB_PORT}`);
 });
 
 window.Echo.connector.pusher.connection.bind('error', (error) => {
