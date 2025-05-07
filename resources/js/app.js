@@ -68,9 +68,16 @@ import Pusher from 'pusher-js';
 
 window.Pusher = Pusher;
 
+// console.log('Environment variables:', {
+//     key: import.meta.env.VITE_REVERB_APP_KEY,
+//     host: import.meta.env.VITE_REVERB_HOST,
+//     port: import.meta.env.VITE_REVERB_PORT,
+//     scheme: import.meta.env.VITE_REVERB_SCHEME,
+// });
+
 console.log('Environment variables:', {
     key: import.meta.env.VITE_REVERB_APP_KEY,
-    host: import.meta.env.VITE_REVERB_HOST,
+    host: '16.170.236.18',
     port: import.meta.env.VITE_REVERB_PORT,
     scheme: import.meta.env.VITE_REVERB_SCHEME,
 });
