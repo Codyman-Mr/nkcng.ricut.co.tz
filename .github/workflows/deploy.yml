@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
@@ -23,25 +23,39 @@ jobs:
         composer install --no-dev --optimize-autoloader --no-interaction
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
 
     - name: Install npm dependencies
       run: |
         npm install
         npm run build
 
+    - name: add contents to .env
+      run: |
+          echo "BROADCAST_DRIVER=reverb" > .env
+          echo "REVERB_APP_ID=305821" >> .env
+          echo "REVERB_APP_KEY=oxt9s055blyluy2yskau" >> .env
+          echo "REVERB_APP_SECRET=k8sovyjknscenni05h6i" >> .env
+          echo "REVERB_HOST=0.0.0.0" >> .env
+          echo "REVERB_PORT=8080" >> .env
+          echo "REVERB_SCHEME=http" >> .env
+          echo "VITE_REVERB_APP_KEY=oxt9s055blyluy2yskau" >> .env
+          echo "VITE_REVERB_HOST=16.170.236.18" >> .env
+          echo "VITE_REVERB_PORT=8080" >> .env
+          echo "VITE_REVERB_SCHEME=ws" >> .env
+
     - name: Deploy to EC2
       env:
         DB_USERNAME: ${{ secrets.DB_USERNAME }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-        HOST: ${{ secrets.EC2_HOST }}
-        USER: ec2-user  # Explicitly use ec2-user
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        USER: ec2-user
       run: |
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-        ssh -o StrictHostKeyChecking=no -i private_key $USER@$HOST << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i private_key $USER@$EC2_HOST << 'EOF'
           cd /home/ec2-user/nkcng-2
           sudo chgrp -R nginx .
           sudo chmod -R g+rwX .
