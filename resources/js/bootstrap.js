@@ -6,12 +6,15 @@ window.Pusher = Pusher;
 
 window.Echo = new Echo({
     broadcaster: 'reverb',
-    key: process.env.VITE_REVERB_APP_KEY,
-    wsHost: process.env.VITE_REVERB_HOST,
-    wsPort: process.env.VITE_REVERB_PORT,
-    wssPort: process.env.VITE_REVERB_PORT,
-    scheme: process.env.VITE_REVERB_SCHEME,
-    enabledTransports: ['ws', 'wss'],
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    host: import.meta.env.VITE_REVERB_HOST,
+    port: import.meta.env.VITE_REVERB_PORT,
+    scheme: import.meta.env.VITE_REVERB_SCHEME,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: import.meta.env.VITE_REVERB_PORT,
+    wssPort: import.meta.env.VITE_REVERB_PORT,
+    wsPath: '', // optional
+    enabledTransports: ['ws', 'wss']
 });
 
 console.log('Echo initialized, connecting to Reverb...');
