@@ -44,9 +44,7 @@ jobs:
 
     - name: Build frontend assets
       run: |
-          npm ci
-          npm run build
-          mv public/build/.vite/manifest.json public/build/manifest.json
+
 
 
     - name: Deploy to EC2
@@ -70,6 +68,9 @@ jobs:
           git fetch origin qual
           git reset --hard origin/qual
           git pull origin qual
+          npm ci
+          npm run build
+          mv public/build/.vite/manifest.json public/build/manifest.json
           composer install --no-dev --optimize-autoloader --no-interaction
           php artisan config:clear
           php artisan cache:clear
