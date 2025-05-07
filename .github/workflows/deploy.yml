@@ -37,7 +37,6 @@ jobs:
         DB_USERNAME: ${{ secrets.DB_USERNAME }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-        VITE_REVERB_HOST: ${{ secrets.VITE_REVERB_HOST }}
         HOST: ${{ secrets.EC2_HOST }}
         USER: ec2-user  # Explicitly use ec2-user
       run: |
