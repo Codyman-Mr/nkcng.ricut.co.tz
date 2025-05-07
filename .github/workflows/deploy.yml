@@ -53,8 +53,11 @@ jobs:
         PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         EC2_HOST: ${{ secrets.EC2_HOST }}
         USER: ec2-user
+        ENV_FILE: ${{ secrets.ENV_FILE }}
       run: |
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+        echo "$ENV_FILE" > .env.remote
+        scp -i private_key -o StrictHostKeyChecking=no .env.remote $USER@$EC2_HOST:/home/ec2-user/nkcng-2/.env
         ssh -o StrictHostKeyChecking=no -i private_key $USER@$EC2_HOST << 'EOF'
           cd /home/ec2-user/nkcng-2
           sudo chgrp -R nginx .
