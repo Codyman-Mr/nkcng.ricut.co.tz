@@ -18,6 +18,21 @@ jobs:
         php-version: '8.3'
         tools: composer
 
+    - name: add contents to .env
+      run: |
+          echo "BROADCAST_DRIVER=reverb" > .env
+          echo "REVERB_APP_ID=305821" >> .env
+          echo "REVERB_APP_KEY=oxt9s055blyluy2yskau" >> .env
+          echo "REVERB_APP_SECRET=k8sovyjknscenni05h6i" >> .env
+          echo "REVERB_HOST=0.0.0.0" >> .env
+          echo "REVERB_PORT=8080" >> .env
+          echo "REVERB_SCHEME=http" >> .env
+          echo "VITE_REVERB_APP_KEY=oxt9s055blyluy2yskau" >> .env
+          echo "VITE_REVERB_HOST=16.170.236.18" >> .env
+          echo "VITE_REVERB_PORT=8080" >> .env
+          echo "VITE_REVERB_SCHEME=ws" >> .env
+
+
     - name: Install Composer dependencies
       run: |
         composer install --no-dev --optimize-autoloader --no-interaction
@@ -33,19 +48,6 @@ jobs:
           npm run build
           mv public/build/.vite/manifest.json public/build/manifest.json
 
-    - name: add contents to .env
-      run: |
-          echo "BROADCAST_DRIVER=reverb" > .env
-          echo "REVERB_APP_ID=305821" >> .env
-          echo "REVERB_APP_KEY=oxt9s055blyluy2yskau" >> .env
-          echo "REVERB_APP_SECRET=k8sovyjknscenni05h6i" >> .env
-          echo "REVERB_HOST=0.0.0.0" >> .env
-          echo "REVERB_PORT=8080" >> .env
-          echo "REVERB_SCHEME=http" >> .env
-          echo "VITE_REVERB_APP_KEY=oxt9s055blyluy2yskau" >> .env
-          echo "VITE_REVERB_HOST=16.170.236.18" >> .env
-          echo "VITE_REVERB_PORT=8080" >> .env
-          echo "VITE_REVERB_SCHEME=ws" >> .env
 
     - name: Deploy to EC2
       env:
