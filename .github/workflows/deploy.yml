@@ -27,6 +27,12 @@ jobs:
       with:
         node-version: '20'
 
+    - name: Build frontend assets
+      run: |
+          NODE_ENV=production npm ci
+          NODE_ENV=production npm run build
+          # Move Vite manifest to correct location for Laravel
+          mv public/build/.vite/manifest.json public/build/manifest.json
 
     - name: add contents to .env
       run: |
@@ -66,6 +72,7 @@ jobs:
           composer install --no-dev --optimize-autoloader --no-interaction
           npm install
           npm run build
+          mv public/build/.vite/manifest.json public/build/manifest.json
           php artisan config:clear
           php artisan cache:clear
           php artisan config:cache
