@@ -29,9 +29,8 @@ jobs:
 
     - name: Build frontend assets
       run: |
-          NODE_ENV=production npm ci
-          NODE_ENV=production npm run build
-          # Move Vite manifest to correct location for Laravel
+          npm ci
+          npm run build
           mv public/build/.vite/manifest.json public/build/manifest.json
 
     - name: add contents to .env
