@@ -27,10 +27,10 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Install npm dependencies
+    - name: Build frontend assets
       run: |
-        npm install
-        npm run build
+          NODE_ENV=production npm ci
+          NODE_ENV=production npm run build
 
     - name: add contents to .env
       run: |
