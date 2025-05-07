@@ -60,7 +60,6 @@
 //     console.log('Joined locations channel');
 // });
 
-//nothing to do here
 
 
 
