@@ -24,9 +24,12 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import fs from 'fs';
+import path from 'path';
+
+// Use relative path for .env
+const envPath = path.resolve(process.cwd(), '.env');
 
 // Debug: Check if .env exists
-const envPath = '/home/ec2-user/nkcng-2/.env';
 if (!fs.existsSync(envPath)) {
     console.error(`.env file not found at ${envPath}`);
 } else {
