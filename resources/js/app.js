@@ -60,6 +60,8 @@
 //     console.log('Joined locations channel');
 // });
 
+//nothing to do here
+
 
 
 import Echo from 'laravel-echo';
