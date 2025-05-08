@@ -103,7 +103,11 @@ class DatabaseSeeder extends Seeder
         // Seed 40 users without loans
         User::factory()
             ->count(40)
-           
+
             ->create();
     }
 }
+
+
+
+

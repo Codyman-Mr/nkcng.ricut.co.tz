@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -54,44 +55,104 @@ class AuthController extends Controller
     }
 
 
-    public function registrationPage()
-    {
-        return view('auth.registration');
-    }
+    // public function registrationPage()
+    // {
+    //     return view('auth.registration');
+    // }
+
+    // public function registration(Request $request)
+    // {
+    //     $request->validate([
+    //         'first_name' => 'required',
+    //         'last_name' => 'required',
+    //         'phone_number' => [
+    //             'required',
+    //             'unique:users,phone_number',
+    //             'regex:/^(?:\+2557\d{8}|\+2556\d{8}|06\d{8}|07\d{8})$/'
+    //         ],
+    //         'password' => 'required|confirmed|min:5',
+    //     ], [
+    //         'phone_number.unique' => "The given phone number is already in use",
+    //         'password.confirmed' => '"Password" and "Confirm Password" should match',
+    //         'phone_number.regex' => 'Invalid phone number',
+    //     ]);
+
+    //     $enqueue = 1;
+    //     $username = 'MIKE001';
+    //     $apiKey = 'atsk_a37133bcba27a4928705557b9903b016812000533f89a91f06747a289a8654dca1dac55d';
+    //     $verification_code = rand(1111, 9999);
+
+    //     $phoneNumber = $request->phone_number;
+
+    //     if (preg_match('/^06\d{8}|07\d{8}$/', $phoneNumber)) {
+    //         $phoneNumber = '+255' . substr($phoneNumber, 1);
+    //     }
+
+    //     $response = Http::withHeaders([
+    //         'Accept' => 'application/json',
+    //         'Content-Type' => 'application/x-www-form-urlencoded',
+    //         'apiKey' => $apiKey,
+    //     ])->asForm()->post('https://api.africastalking.com/version1/messaging', [
+    //                 'username' => $username,
+    //                 'to' => $phoneNumber,
+    //                 'from' => 'NK CNG',
+    //                 'message' => "Your verification code is {$verification_code}",
+    //                 'enqueue' => $enqueue,
+    //             ]);
+
+    //     if ($response->successful()) {
+    //         $user = User::create([
+    //             'first_name' => $request->first_name,
+    //             'last_name' => $request->last_name,
+    //             'phone_number' => $request->phone_number,
+    //             'password' => Hash::make($request->password),
+    //             'verification_code' => $verification_code
+    //         ]);
+
+    //         Session::put('user', $user);
+    //         return redirect('/otp-verification');
+    //     } else {
+    //         return back()->withErrors(['other_errors' => 'Failed to send Verification Code']);
+    //     }
+    // }
+
 
     public function registration(Request $request)
     {
-        $request->validate([
-            'first_name' => 'required',
-            'last_name' => 'required',
-            'phone_number' => [
-                'required',
-                'unique:users,phone_number',
-                'regex:/^(?:\+2557\d{8}|\+2556\d{8}|06\d{8}|07\d{8})$/'
-            ],
-            'password' => 'required|confirmed|min:5',
-        ], [
-            'phone_number.unique' => "The given phone number is already in use",
-            'password.confirmed' => '"Password" and "Confirm Password" should match',
-            'phone_number.regex' => 'Invalid phone number',
-        ]);
+        try {
+            $request->validate([
+                'first_name' => 'required',
+                'last_name' => 'required',
+                'phone_number' => [
+                    'required',
+                    'unique:users,phone_number',
+                    'regex:/^(?:\+2557\d{8}|\+2556\d{8}|06\d{8}|07\d{8})$/'
+                ],
+                'password' => 'required|confirmed|min:5',
+            ], [
+                'phone_number.unique' => "The given phone number is already in use",
+                'password.confirmed' => '"Password" and "Confirm Password" should match',
+                'phone_number.regex' => 'Invalid phone number',
+            ]);
 
-        $enqueue = 1;
-        $username = 'MIKE001';
-        $apiKey = 'atsk_a37133bcba27a4928705557b9903b016812000533f89a91f06747a289a8654dca1dac55d';
-        $verification_code = rand(1111, 9999);
+            $enqueue = 1;
+            $username = env('AFRICASTALKING_USERNAME', 'MIKE001');
+            $apiKey = env('AFRICASTALKING_API_KEY', 'atsk_a37133bcba27a4928705557b9903b016812000533f89a91f06747a289a8654dca1dac55d');
+            $verification_code = rand(1111, 9999);
 
-        $phoneNumber = $request->phone_number;
+            $phoneNumber = $request->phone_number;
+            if (preg_match('/^06\d{8}|07\d{8}$/', $phoneNumber)) {
+                $phoneNumber = '+255' . substr($phoneNumber, 1);
+            }
 
-        if (preg_match('/^06\d{8}|07\d{8}$/', $phoneNumber)) {
-            $phoneNumber = '+255' . substr($phoneNumber, 1);
-        }
-
-        $response = Http::withHeaders([
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/x-www-form-urlencoded',
-            'apiKey' => $apiKey,
-        ])->asForm()->post('https://api.africastalking.com/version1/messaging', [
+            $response = Http::withOptions(['debug' => fopen('php://stderr', 'w')])
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                    'apiKey' => $apiKey,
+                ])
+                ->asForm()
+                ->post('https://api.africastalking.com/version1/messaging', [
                     'username' => $username,
                     'to' => $phoneNumber,
                     'from' => 'NK CNG',
@@ -99,22 +160,29 @@ class AuthController extends Controller
                     'enqueue' => $enqueue,
                 ]);
 
-        if ($response->successful()) {
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'phone_number' => $request->phone_number,
-                'password' => Hash::make($request->password),
-                'verification_code' => $verification_code
-            ]);
+            if ($response->successful()) {
+                $user = User::create([
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'phone_number' => $request->phone_number,
+                    'password' => Hash::make($request->password),
+                    'verification_code' => $verification_code
+                ]);
 
-            Session::put('user', $user);
-            return redirect('/otp-verification');
-        } else {
-            return back()->withErrors(['other_errors' => 'Failed to send Verification Code']);
+                Session::put('user', $user);
+                return redirect('/otp-verification');
+            } else {
+                Log::error('Africa\'s Talking API error', ['response' => $response->json()]);
+                return back()->withErrors(['other_errors' => 'Failed to send Verification Code']);
+            }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('Failed to connect to Africa\'s Talking API: ' . $e->getMessage());
+            return back()->withErrors(['other_errors' => 'Unable to connect to SMS service. Please try again later.']);
+        } catch (\Exception $e) {
+            Log::error('Registration error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['other_errors' => 'An unexpected error occurred. Please try again.']);
         }
     }
-
     public function verificationPage(Request $request)
     {
         $user = $request->session()->get('user');
