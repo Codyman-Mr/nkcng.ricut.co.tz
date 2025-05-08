@@ -21,10 +21,17 @@ class LocationUpdated implements ShouldBroadcast
     public function __construct($deviceId, $latitude, $longitude, $timestamp)
     {
         Log::info('Constructing LocationUpdated event for device: ' . $deviceId);
-        $this->deviceId = $deviceId;
-        $this->latitude = $latitude;
-        $this->longitude = $longitude;
-        $this->timestamp = $timestamp;
+        if (is_array($deviceId)) {
+            $this->deviceId = $deviceId['deviceId'] ?? $deviceId['device_id'];
+            $this->latitude = $deviceId['latitude'];
+            $this->longitude = $deviceId['longitude'];
+            $this->timestamp = $deviceId['timestamp'];
+        } else {
+            $this->deviceId = $deviceId;
+            $this->latitude = $latitude;
+            $this->longitude = $longitude;
+            $this->timestamp = $timestamp;
+        }
     }
 
     public function broadcastOn()
@@ -36,5 +43,15 @@ class LocationUpdated implements ShouldBroadcast
     public function broadcastAs()
     {
         return 'LocationUpdated';
+    }
+
+    public function broadcastWith()
+    {
+        return [
+            'deviceId' => $this->deviceId,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
+            'timestamp' => $this->timestamp,
+        ];
     }
 }
