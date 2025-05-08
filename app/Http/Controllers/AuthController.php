@@ -264,3 +264,7 @@ class AuthController extends Controller
         return redirect()->back();
     }
 }
+
+
+
+// // namespace App\Http\Controllers;
