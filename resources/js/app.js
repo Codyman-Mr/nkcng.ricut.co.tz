@@ -131,3 +131,6 @@ window.Echo.channel('locations').listen('.LocationUpdated', (event) => {
 window.Echo.join('locations').here(() => {
     console.log('Joined locations channel');
 });
+
+
+//
