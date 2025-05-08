@@ -55,10 +55,10 @@ class AuthController extends Controller
     }
 
 
-    // public function registrationPage()
-    // {
-    //     return view('auth.registration');
-    // }
+    public function registrationPage()
+    {
+        return view('auth.registration');
+    }
 
     // public function registration(Request $request)
     // {
