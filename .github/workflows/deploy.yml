@@ -1,73 +1,79 @@
 name: Deploy to EC2
+
 on:
   push:
     branches:
       - qual
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Create .env file
-        run: |
-          echo "APP_NAME=Laravel" > .env
-          echo "APP_ENV=production" >> .env
-          echo "APP_KEY=base64:rw14A9kcm4mBaX91+UKouWkrT7vm+j0Ck5vSpb1Ynq4=" >> .env
-          echo "APP_DEBUG=false" >> .env
-          echo "APP_URL=http://16.170.236.18" >> .env
-          echo "LOG_CHANNEL=stack" >> .env
-          echo "LOG_LEVEL=debug" >> .env
-          echo "DB_CONNECTION=mysql" >> .env
-          echo "DB_HOST=127.0.0.1" >> .env
-          echo "DB_PORT=3306" >> .env
-          echo "DB_DATABASE=nkcng" >> .env
-          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "BROADCAST_DRIVER=reverb" >> .env
-          echo "CACHE_DRIVER=file" >> .env
-          echo "QUEUE_CONNECTION=sync" >> .env
-          echo "SESSION_DRIVER=file" >> .env
-          echo "SESSION_LIFETIME=120" >> .env
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        tools: composer
+
+    - name: add contents to .env
+      run: |
+          echo "BROADCAST_DRIVER=reverb" > .env
           echo "REVERB_APP_ID=305821" >> .env
           echo "REVERB_APP_KEY=oxt9s055blyluy2yskau" >> .env
           echo "REVERB_APP_SECRET=k8sovyjknscenni05h6i" >> .env
-          echo "REVERB_HOST=0.0.0.0" >> .env
+          echo "REVERB_HOST=16.170.236.18" >> .env
           echo "REVERB_PORT=8080" >> .env
-          echo "REVERB_SCHEME=http" >> .env
+          echo "REVERB_SCHEME=ws" >> .env
           echo "VITE_REVERB_APP_KEY=oxt9s055blyluy2yskau" >> .env
           echo "VITE_REVERB_HOST=16.170.236.18" >> .env
           echo "VITE_REVERB_PORT=8080" >> .env
           echo "VITE_REVERB_SCHEME=ws" >> .env
-          echo "AFRICASTALKING_USERNAME=MIKE001" >> .env
-          echo "AFRICASTALKING_API_KEY=atsk_a37133bcba27a4928705557b9903b016812000533f89a91f06747a289a8654dca1dac55d" >> .env
-      - name: Install dependencies
-        run: npm install
-      - name: Build frontend
-        run: npm run build
-      - name: Deploy to EC2
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-        run: |
-          echo "$EC2_SSH_KEY" > key.pem
-          chmod 600 key.pem
-          scp -i key.pem -r public/build .env ${EC2_USER}@${EC2_HOST}:/home/ec2-user/nkcng-2/
-          ssh -i key.pem ${EC2_USER}@${EC2_HOST} << 'EOF'
-            cd /home/ec2-user/nkcng-2
-            sudo chown deploy:nginx .env
-            sudo chmod 664 .env
-            sudo chown -R deploy:nginx public/build
-            rm -f .env.local .env.production .env.example.bak
-            php artisan config:clear
-            php artisan cache:clear
-            php artisan optimize
-            php artisan migrate --force
-            sudo supervisorctl restart reverb
-            sudo systemctl restart nginx
-          EOF
+
+
+    - name: Install Composer dependencies
+      run: |
+        composer install --no-dev --optimize-autoloader --no-interaction
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Deploy to EC2
+      env:
+        DB_USERNAME: ${{ secrets.DB_USERNAME }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        USER: ec2-user
+        ENV_FILE: ${{ secrets.ENV_FILE }}
+      run: |
+        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+        echo "$ENV_FILE" > .env.remote
+        scp -i private_key -o StrictHostKeyChecking=no .env.remote $USER@$EC2_HOST:/home/ec2-user/nkcng-2/.env
+        ssh -o StrictHostKeyChecking=no -i private_key $USER@$EC2_HOST << 'EOF'
+          cd /home/ec2-user/nkcng-2
+          sudo chgrp -R nginx .
+          sudo chmod -R g+rwX .
+          sudo find . -type d -exec chmod g+s {} \;
+          git config --global --add safe.directory /home/ec2-user/nkcng-2
+          git fetch origin qual
+          git reset --hard origin/qual
+          git pull origin qual
+          npm ci
+          npm run build
+          mv public/build/.vite/manifest.json public/build/manifest.json
+          rm -f .env.local .env.production .env.example.bak
+          composer install --no-dev --optimize-autoloader --no-interaction
+          php artisan config:clear
+          php artisan cache:clear
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          sudo systemctl restart php-fpm
+          sudo systemctl restart nginx
+          sudo systemctl restart supervisord
+        EOF
