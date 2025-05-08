@@ -70,12 +70,7 @@ let reverbHost = '16.170.236.18';
 
 window.Pusher = Pusher;
 
-// console.log('Environment variables:', {
-//     key: import.meta.env.VITE_REVERB_APP_KEY,
-//     host: reverbHost,
-//     port: import.meta.env.VITE_REVERB_PORT,
-//     scheme: import.meta.env.VITE_REVERB_SCHEME,
-// });
+
 
 console.log('Environment variables:', {
     key: import.meta.env.VITE_REVERB_APP_KEY,
