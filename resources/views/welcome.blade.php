@@ -1,6 +1,5 @@
-@extends('layouts.app')
 
-@section('content')
+@section('main-content')
     <div class="bg-gray-100 h-full flex flex-col space-between">
         <div class="navbar bg-white shadow-md py-4 px-6 w-full">
             <div class="navbar-contents flex items-center   w-full">
@@ -27,7 +26,7 @@
             </div>
         </div>
 
-        
+
     </div>
 @endsection
 
