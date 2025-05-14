@@ -126,9 +126,11 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    // 'providers' => [
-    //     // ...
-    //     BroadcastServiceProvider::class,
-    // ],
+    'providers' => ServiceProvider::defaultProviders()->merge([
+        // Your custom providers
+        App\Providers\SearchMacroServiceProvider::class,
+        // IDE Helper for development only
+        env('APP_ENV') !== 'production' ? Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class : null,
+    ])->toArray(),
 
 ];

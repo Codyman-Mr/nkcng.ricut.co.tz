@@ -41,14 +41,10 @@ class LocationTracker extends Component
                 $this->locations[$id] = [
                     'latitude' => (float) match ($id) {
                         'device1' => 37.7749,
-                        'device2' => 34.0522,
-                        'device3' => 40.7128,
                         default => 0,
                     },
                     'longitude' => (float) match ($id) {
                         'device1' => -122.4194,
-                        'device2' => -118.2437,
-                        'device3' => -74.0060,
                         default => 0,
                     },
                     'timestamp' => now()->toDateTimeString(),

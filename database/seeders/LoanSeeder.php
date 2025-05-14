@@ -13,7 +13,6 @@ class LoanSeeder extends Seeder
         // Generate 50 loans with related users and installations
         Loan::factory()->count(100)->create();
 
-        // Seed payments for each loan
-        Payment::factory()->count(100)->create();
+       
     }
 }

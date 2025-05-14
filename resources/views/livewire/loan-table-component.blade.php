@@ -44,7 +44,7 @@
 
                                                         {{-- 🟢 This is the key: wire:model.live updates the Livewire property --}}
                                                         <input type="text" id="search-loans"
-                                                            wire:model.debounce.500ms="search"
+                                                            wire:model.live="search"
                                                             class="w-full py-2.5 ps-10 pe-24 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-gray-500 focus:border-gray-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-gray-500 dark:focus:border-gray-500"
                                                             placeholder="Search loans..." />
 
@@ -439,7 +439,7 @@
             </div>
         </div>
 
-       
+
     </div>
 
 

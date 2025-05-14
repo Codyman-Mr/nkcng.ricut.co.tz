@@ -7,6 +7,46 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 
+/**
+ * 
+ *
+ * @property int $id
+ * @property int $user_id
+ * @property int $installation_id
+ * @property string $loan_type
+ * @property string $loan_required_amount
+ * @property string $loan_payment_plan
+ * @property string|null $loan_start_date
+ * @property string|null $loan_end_date
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $rejection_reason
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\LoanDocument> $documents
+ * @property-read int|null $documents_count
+ * @property-read mixed $time_to_next_payment
+ * @property-read \App\Models\Installation $installation
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment> $payments
+ * @property-read int|null $payments_count
+ * @property-read \App\Models\User $user
+ * @method static \Database\Factories\LoanFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereInstallationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereLoanEndDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereLoanPaymentPlan($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereLoanRequiredAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereLoanStartDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereLoanType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereRejectionReason($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Loan whereUserId($value)
+ * @mixin \Eloquent
+ */
 class Loan extends Model
 {
     use HasFactory;

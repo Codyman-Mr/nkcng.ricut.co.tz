@@ -55,6 +55,11 @@
                     </div>
                 @elseif ($loan->status === 'none')
                     <span class="text-gray-500">No Status 🚫</span>
+                @elseif ($loan->status === 'rejected')
+                    <span class="text-gray-500">Your loan Application has been rejected </span>
+                    <span>
+                        Reason: {{ $loan->rejection_reason }}
+                    </span>
                 @else
                     <span class="text-gray-500">Unknown Status 🔍</span>
                 @endif

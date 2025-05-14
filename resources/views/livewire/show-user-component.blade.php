@@ -49,24 +49,14 @@
     </div>
 
     <!-- Map area (divs 2,3,5,6) -->
-    <div class="bg-gray-300 md:col-span-2 md:row-span-2 flex items-center rounded-lg py-4">
-        @if ($deviceId)
+    <div class="bg-gray-300 md:col-span-2 md:row-span-2 flex items-center justify-center rounded-lg py-4">
+        @if ($gpsDevice)
             <div class="w-full h-full ">
-                <livewire:location-tracker :deviceId="$deviceId" />
+                <livewire:location-tracker :deviceId="$gpsDeviceId" />
             </div>
         @else
-            <p class="text-gray-600">No GPS device assigned to this user.</p>
+            <livewire:assign-gps-device :userId="$userId" />
         @endif
-        {{-- <!-- Map Container -->
-        <div id="map"
-            class="flex flex-col rounded-sm w-full h-full p-1  shadow-sm cursor-pointer transition-all duration-500 ease-in-out"
-            onclick="toggleMapSize(event)">
-            <!-- Map content goes here -->
-        </div>
-
-
-        <div class="backdrop" onclick="toggleMapSize(event)"></div> --}}
-
     </div>
 
 
@@ -155,10 +145,3 @@
 
 
 </div>
-
-
-
-
-
-
-

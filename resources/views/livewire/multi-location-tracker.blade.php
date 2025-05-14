@@ -1,7 +1,7 @@
 <!-- resources/views/livewire/multi-location-tracker.blade.php -->
 <div>
-    <h1>Multi Device Location Tracker</h1>
-    <div wire:ignore id="map" style="height: 400px; width: 800px;"></div>
+
+    <div wire:ignore id="map" style="height: 400px; width: 800px; margin: auto;"></div>
 </div>
 
 @push('scripts')

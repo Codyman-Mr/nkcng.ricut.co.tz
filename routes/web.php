@@ -9,12 +9,9 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Reports;
 use App\Http\Controllers\TestingController;
 use App\Http\Controllers\LoanPackageController;
-use App\Http\Controllers\GpsController;
-use App\Models\Loan;
-use Illuminate\Http\Request;
-use App\Models\DeviceLocation;
-use App\Events\LocationUpdated;
-use App\Http\Controllers\LocationController;
+use PhpParser\Node\Expr\Assign;
+use App\Http\Controllers\GpsDeviceController;
+use App\Http\Controllers\InstallationController;
 
 Route::get('/', [AuthController::class, 'dashboard'])->middleware('auth');
 
@@ -51,13 +48,29 @@ Route::get('/report', [Reports::class, 'index'])->name('report')->middleware('au
 
 
 Route::get('/users', [UserController::class, 'index'])->name('users')->middleware('auth');
-Route::get('/show-user/{user}',[UserController::class,'show'])->name('show-user')->middleware('auth');
+Route::get('/show-user/{user}', [UserController::class, 'show'])->name('show-user')->middleware('auth');
 Route::post('/store-user', [UserController::class, 'store'])->middleware('auth');
 Route::put('/update-user/{user}', [UserController::class, 'update'])->name('update-user')->middleware('auth');
-Route::delete('/delete-user/{user}', [UserController::class , 'destroy'])->name('delete-user')->middleware('auth');
+Route::delete('/delete-user/{user}', [UserController::class, 'destroy'])->name('delete-user')->middleware('auth');
 
 
-Route::get('/testing', [TestingController::class,'index'])->name('testing')->middleware('auth');
+Route::get('/testing', [TestingController::class, 'index'])->name('testing')->middleware('auth');
 
-Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
+Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store')->middleware('auth');
+;
 
+Route::get('/assign-gps-device', [GpsDeviceController::class, 'assignGpsDevice'])
+    ->name('assign-gps-device')
+    ->middleware('auth');
+
+Route::get('/gps-devices', [GpsDeviceController::class, 'index'])
+    ->name('gps-devices')
+    ->middleware('auth');
+
+Route::get('/show-gps-device/{gpsDevice}', [GpsDeviceController::class, 'show'])->name('gps-device.show');
+
+Route::get('/installations', [InstallationController::class, 'index'])->name('installations')->middleware('auth');
+
+Route::get('/approve-installation/{installationId}', [InstallationController::class, 'approveInstallation'])->name('approve-installation')->middleware('auth');
+
+Route::post('/approve-installation/{installationId}', [InstallationController::class, 'updateInstallation'])->name('approve-installation.update')->middleware('auth');

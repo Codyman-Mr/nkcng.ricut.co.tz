@@ -95,7 +95,7 @@ class DatabaseSeeder extends Seeder
                         return ['user_id' => $user->id];
                     })
                     ->when(rand(0, 1), function ($loan) {
-                        $loan->has(Payment::factory()->count(rand(1, 3)));
+                        $loan->has(Payment::factory()->count(rand(1, 5)));
                     })
             )
             ->create();
