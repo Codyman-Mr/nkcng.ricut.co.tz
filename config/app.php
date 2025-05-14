@@ -130,7 +130,7 @@ return [
         // Custom providers
         App\Providers\SearchMacroServiceProvider::class,
         // IDE Helper for development only
-        env('APP_ENV', 'production') !== 'production' ? Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class : null,
+        
     ])->toArray(),
 
 ];
