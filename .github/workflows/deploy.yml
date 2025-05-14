@@ -33,12 +33,17 @@ jobs:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         EC2_HOST: ${{ secrets.EC2_HOST }}
+        USER: ec2-user
         ENV_FILE: ${{ secrets.ENV_FILE }}
       run: |
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
         echo "$ENV_FILE" > .env
+        echo "Testing SSH connection to $USER@$EC2_HOST"
+        ssh -i private_key -o StrictHostKeyChecking=no $USER@$EC2_HOST "echo SSH connection successful"
+        echo "Copying .env to EC2"
         scp -i private_key -o StrictHostKeyChecking=no .env $USER@$EC2_HOST:/home/ec2-user/nkcng-2/.env
-        ssh -o StrictHostKeyChecking=no -i private_key $USER@$EC2_HOST << 'EOF'
+        echo "Running deployment commands"
+        ssh -i private_key -o StrictHostKeyChecking=no $USER@$EC2_HOST << 'EOF'
           set -e
           cd /home/ec2-user/nkcng-2
           echo "Deploying to $(pwd)"
