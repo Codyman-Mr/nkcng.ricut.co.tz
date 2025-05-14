@@ -56,7 +56,6 @@ jobs:
           git pull origin qual
           npm ci
           npm run build
-          mv public/build/.vite/manifest.json public/build/manifest.json
           composer install --no-dev --optimize-autoloader --no-interaction
           php artisan config:clear
           php artisan cache:clear
