@@ -18,21 +18,6 @@ jobs:
         php-version: '8.3'
         tools: composer
 
-    - name: add contents to .env
-      run: |
-          echo "BROADCAST_DRIVER=reverb" > .env
-          echo "REVERB_APP_ID=305821" >> .env
-          echo "REVERB_APP_KEY=oxt9s055blyluy2yskau" >> .env
-          echo "REVERB_APP_SECRET=k8sovyjknscenni05h6i" >> .env
-          echo "REVERB_HOST=16.170.236.18" >> .env
-          echo "REVERB_PORT=8080" >> .env
-          echo "REVERB_SCHEME=ws" >> .env
-          echo "VITE_REVERB_APP_KEY=oxt9s055blyluy2yskau" >> .env
-          echo "VITE_REVERB_HOST=16.170.236.18" >> .env
-          echo "VITE_REVERB_PORT=8080" >> .env
-          echo "VITE_REVERB_SCHEME=ws" >> .env
-
-
     - name: Install Composer dependencies
       run: |
         composer install --no-dev --optimize-autoloader --no-interaction
@@ -48,14 +33,15 @@ jobs:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         EC2_HOST: ${{ secrets.EC2_HOST }}
-        USER: ec2-user
         ENV_FILE: ${{ secrets.ENV_FILE }}
       run: |
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-        echo "$ENV_FILE" > .env.remote
-        scp -i private_key -o StrictHostKeyChecking=no .env.remote $USER@$EC2_HOST:/home/ec2-user/nkcng-2/.env
+        echo "$ENV_FILE" > .env
+        scp -i private_key -o StrictHostKeyChecking=no .env $USER@$EC2_HOST:/home/ec2-user/nkcng-2/.env
         ssh -o StrictHostKeyChecking=no -i private_key $USER@$EC2_HOST << 'EOF'
+          set -e
           cd /home/ec2-user/nkcng-2
+          echo "Deploying to $(pwd)"
           sudo chgrp -R nginx .
           sudo chmod -R g+rwX .
           sudo find . -type d -exec chmod g+s {} \;
@@ -66,14 +52,15 @@ jobs:
           npm ci
           npm run build
           mv public/build/.vite/manifest.json public/build/manifest.json
-          rm -f .env.local .env.production .env.example.bak
           composer install --no-dev --optimize-autoloader --no-interaction
           php artisan config:clear
           php artisan cache:clear
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
+          php artisan migrate --force
           sudo systemctl restart php-fpm
           sudo systemctl restart nginx
           sudo systemctl restart supervisord
+          echo "Deployment completed successfully"
         EOF

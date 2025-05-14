@@ -127,10 +127,12 @@ return [
     ],
 
     'providers' => ServiceProvider::defaultProviders()->merge([
-        // Your custom providers
+        // Custom providers
         App\Providers\SearchMacroServiceProvider::class,
         // IDE Helper for development only
-        env('APP_ENV') !== 'production' ? Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class : null,
+        env('APP_ENV', 'production') !== 'production' ? Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class : null,
     ])->toArray(),
 
 ];
+
+
