@@ -2,22 +2,21 @@
 
 namespace Database\Factories;
 
-use App\Models\Installation;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\CustomerVehicle;
 use App\Models\CylinderType;
-use Illuminate\Database\Eloquent\Factories\Factory;
 
 class InstallationFactory extends Factory
 {
-    protected $model = Installation::class;
+    protected $model = \App\Models\Installation::class;
 
     public function definition()
     {
         return [
-            'customer_vehicle_id' => CustomerVehicle::factory(), // Create or use an existing CustomerVehicle
-            'cylinder_type_id' => CylinderType::factory(), // Create or use an existing
-            'status' => $this->faker->randomElement(['pending', 'completed']), // Random status
-            'payment_type' => $this->faker->randomElement(['direct', 'loan']), // Random status
+            'customer_vehicle_id' => CustomerVehicle::factory(),
+            'cylinder_type_id' => $this->faker->randomElement([1, 2, 3]), // Match seeded CylinderType IDs
+            'status' => $this->faker->randomElement(['pending', 'completed']),
+            'payment_type' => 'loan',
             'created_at' => now(),
             'updated_at' => now(),
         ];

@@ -12,8 +12,7 @@ class CylinderTypeFactory extends Factory
     public function definition()
     {
         return [
-            'id' => $this->faker->unique()->numberBetween(1,100),
-            'name' => $this->faker->randomElement(['7L', '11L', '15L']),
+           
         ];
     }
 }

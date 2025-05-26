@@ -25,11 +25,11 @@ class UserFactory extends Factory
     {
         return [
             'first_name' => fake()->name(),
-            'last_name'=> fake()->name(),
+            'last_name' => fake()->name(),
             'phone_number' => fake()->numerify('07########'),
- 'gender' => fake()->randomElement(['male', 'female']), 
-'dob' => fake()->dateTimeBetween('-80 years', '-18 years')->format('Y-m-d'),           
-'nida_number' => fake()->numerify('####################'), 
+            'gender' => fake()->randomElement(['male', 'female']),
+            'dob' => fake()->dateTimeBetween('-80 years', '-18 years')->format('Y-m-d'),
+            'nida_number' => fake()->numerify('####################'),
             'address' => fake()->address(),
 
             'password' => bcrypt('password'),
@@ -42,7 +42,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
     }

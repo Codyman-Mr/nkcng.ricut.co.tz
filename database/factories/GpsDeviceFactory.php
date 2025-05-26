@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\User;
+use App\Models\CustomerVehicle;
 
 class GpsDeviceFactory extends Factory
 {
@@ -11,12 +13,13 @@ class GpsDeviceFactory extends Factory
     public function definition()
     {
         return [
-            'user_id' => \App\Models\User::factory(),
-            'device_id' => function () {
-                return \App\Models\Location::factory()->create()->id; // Create Location first
-            },
+            'device_id' => $this->faker->unique()->randomNumber(),
+            'activity_status' => 'inactive',
+            'assignment_status' => 'unassigned',
+            'power_status' => 'off',
             'created_at' => now(),
             'updated_at' => now(),
+            'deleted_at' => null,
         ];
     }
 }

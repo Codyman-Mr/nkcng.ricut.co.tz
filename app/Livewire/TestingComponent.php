@@ -2,7 +2,6 @@
 
 namespace App\Livewire;
 
-use App\Models\CustomerVehicle;
 use Livewire\Component;
 use App\Models\Loan;
 use App\Models\Payment;
@@ -24,10 +23,6 @@ class TestingComponent extends Component
         'endDate' => ['except' => ''],
         'loanType' => ['except' => 'all']
     ];
-
-    public $search = '';
-
-
 
     public function mount()
     {
@@ -122,16 +117,12 @@ class TestingComponent extends Component
             'paymentMethodsLabels' => $paymentMethodsLabels, // Pass labels
             'installationCounts' => $installationCounts,
             'installationKeys' => $installationKeys,
-            'paymentMethodsPie'=>$paymentMethodsPie,
-            'paymentMethodsTotalPie'=>$paymentMethodsPieTotals,
-            'paymentMethodsPieLabels'=>$paymentMethodsPieLabels,
-            'filteredLoans' =>$filteredLoans
+            'paymentMethodsPie' => $paymentMethodsPie,
+            'paymentMethodsTotalPie' => $paymentMethodsPieTotals,
+            'paymentMethodsPieLabels' => $paymentMethodsPieLabels,
+            'filteredLoans' => $filteredLoans
         ];
 
-        return view('livewire.testing-component', [
-            $reportData,
-            'users' => User::searchLike(['first_name', 'last_name', 'loans.status'],$this->search)->get(),
-
-        ]);
+        return view('livewire.testing-component', $reportData);
     }
 }

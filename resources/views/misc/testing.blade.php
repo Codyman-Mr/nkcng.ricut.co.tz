@@ -7,23 +7,10 @@
 
 
 
-        {{-- <livewire:test-msg />
+        {{-- <livewire:test-msg /> --}}
 
 
 
-        <div>
-            <livewire:pricing-card accesskey="1" />
-        </div>
-
-        <button type="button" class="btn btn-accent " onclick=testingRedirect()>
-            testing redirect
-        </button>
-
-
-
-        <!-- Add this in your layout if Alpine.js isn't loaded -->
-        <script src="//unpkg.com/alpinejs" defer></script>
- --}}
 
         {{-- <livewire:user-location-tracker :user-id="1" /> --}}
 
@@ -37,7 +24,7 @@
 
         </div>
 
-      
+
 
 {{--
         @foreach ($users as $user)

@@ -2,35 +2,23 @@
 
 namespace Database\Factories;
 
-use App\Models\Payment;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Loan;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Payment>
- */
 class PaymentFactory extends Factory
 {
-    protected $model = Payment::class;
+    protected $model = \App\Models\Payment::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
-    public function definition(): array
+    public function definition()
     {
-        // Select a random loan
-        $loan = Loan::inRandomOrder()->first();
-
         return [
-            'loan_id' => $loan->id,
-            'users_id' => User::inRandomOrder()->first()->id,
-            'paid_amount' => $this->faker->randomFloat(2, 0, $loan->loan_required_amount), 
-            'payment_date' => $this->faker->dateTimeBetween($loan->loan_start_date, $loan->loan_end_date),
-            'payment_method' => $this->faker->randomElement(['cash', 'bank_transfer', 'mobile_money']),
-            'payment_description' => $this-> faker-> randomElement(['paid', 'paid in full', 'on time']),
+            'loan_id' => Loan::factory(),
+            'users_id' => User::factory(),
+            'payment_date' => $this->faker->dateTimeBetween('-6 months', 'now'),
+            'paid_amount' => $this->faker->numberBetween(50000, 200000),
+            'payment_method' => $this->faker->randomElement(['bank_transfer', 'mobile_money', 'cash']),
+            'payment_description' => $this->faker->sentence,
             'created_at' => now(),
             'updated_at' => now(),
         ];

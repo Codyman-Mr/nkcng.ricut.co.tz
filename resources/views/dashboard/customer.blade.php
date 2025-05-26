@@ -3,7 +3,7 @@
     <div>
         @if ($loan)
             <div class="status-container">
-                Loan Status:
+
                 @if ($loan->status === 'approved')
                     <table class="table table-striped text-sm" style="width: 100%;">
                         <thead class="text-xs bg-gray-50">
@@ -46,12 +46,17 @@
                     <div class="flex flex-col items-center justify-center gap-4 mt-4">
                         <h3 class="text-3xl font-bold text-gray-900"> Your request is pending approval </h3>
                         <h3 class="text-3xl font-bold text-gray-900"> Please wait </h3>
+
+                        <div class="h-full w-full"> 
+                            <lottie-player src="{{ asset('lottie/pending-animation.json') }}" background="transparent"
+                                speed="1" loop autoplay></lottie-player>
+                        </div>
                     </div>
                 @elseif ($loan->status === 'denied')
                     <div class="flex flex-col items-center justify-center gap-4 mt-4">
-                        <h3 class="text-3xl font-bold text-gray-900"> Your request Has been Denied </h3>
-                        <h3 class="text-3xl font-bold text-gray-900"> Please Contact our offices for more clarification
-                        </h3>
+                        <h5 class="text-3xl font-bold text-gray-900"> Your request Has been Denied </h5>
+                        <h5 class="text-3xl font-bold text-gray-900"> Please Contact our offices for more clarification
+                        </h5>
                     </div>
                 @elseif ($loan->status === 'none')
                     <span class="text-gray-500">No Status 🚫</span>

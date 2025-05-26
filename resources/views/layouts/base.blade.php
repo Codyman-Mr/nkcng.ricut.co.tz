@@ -37,6 +37,10 @@
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.3/mapbox-gl.js"></script>
 
 
+    <!-- Lottie -->
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+
     <!-- Livewire and Vite -->
     @livewireStyles
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])

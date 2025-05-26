@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cylinder_types', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
-            $table->softDeletes();
-            
+        Schema::table('loan_packages', function (Blueprint $table) {
+            $table->dropColumn('cylinder_capacity');
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cylinder_types');
+        Schema::table('loan_packages', function (Blueprint $table) {
+            $table->string('cylinder_capacity')->after('amount_to_finance');
+        });
     }
 };
