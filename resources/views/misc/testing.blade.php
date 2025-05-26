@@ -6,9 +6,10 @@
     <div class="flex flex-col justify-center items-center overflow-x-hiddeb m-6 p-8">
 
 
+{{--
+        <livewire:test-msg /> --}}
 
-        {{-- <livewire:test-msg /> --}}
-
+        <livewire:send-sms />
 
 
 

@@ -3,11 +3,10 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use APP\Models\Loan;
+use App\Models\Loan;
 use App\Models\CylinderType;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-
 
 class LoanApproval extends Component
 {
@@ -25,59 +24,20 @@ class LoanApproval extends Component
         $this->cylinder_type = optional($loan->installation)->cylinder_type_id;
     }
 
-    // public function approveLoan()
-    // {
-
-    //     Log::info('Loan Approval started');
-    //     Log::info('Validating values');
-    //     $this->validate([
-    //         'cylinder_type' => 'required|exists:cylinder_types,id',
-    //         'loan_required_amount' => 'required|string',
-    //         'loan_payment_plan' => 'required|string',
-    //         'loan_end_date' => [
-    //             'required',
-    //             'date',
-    //             'after:' . now()->addYear()->format('Y-m-d'), // Must be at least 1 year from today
-    //         ],
-    //     ]);
-    //     Log::info('Validation passed');
-
-    //     DB::beginTransaction();
-    //     Log::info('Database transaction started');
-
-    //     try {
-    //         Log::info('started approving loan');
-    //         Log::info('started updating loan values in database');
-    //         $this->loan->update([
-    //             'loan_required_amount' => str_replace(',', '', $this->loan_required_amount),
-    //             'loan_payment_plan' => $this->loan_payment_plan,
-    //             'loan_end_date' => $this->loan_end_date,
-    //             'status' => 'approved',
-    //         ]);
-
-
-    //         Log::info('Updating installation cylinder values');
-    //         $this->loan->installation->update([
-    //             'cylinder_type_id' => $this->cylinder_type,
-    //         ]);
-
-    //         DB::commit();
-    //         Log::info('Database transaction committed');
-
-    //         session()->flash('message', 'Loan approved successfully.');
-    //         Log::info('Redirecting to home');
-    //         return $this->redirect('/');
-    //     } catch (\Exception $e) {
-    //         session()->flash('error', $e->getMessage());
-    //         Log::error('Error occurred: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-    //         DB::rollback();
-    //         session()->flash('error', 'An error occurred while submitting the application.');
-    //     }
-    //     if (config('app.debug')) {
-    //         Log::debug('Query log', DB::getQueryLog());
-    //     }
-    // }
-
+    public function rules()
+    {
+        return [
+            'cylinder_type' => 'required|exists:cylinder_types,id',
+            'loan_required_amount' => 'required|string',
+            'loan_payment_plan' => 'required|string',
+            'loan_end_date' => [
+                'required',
+                'date',
+                'after:' . now()->addYear()->format('Y-m-d'),
+            ],
+            'rejection_reason' => 'required_if:showRejectModal,true|string|min:5',
+        ];
+    }
 
     public function approveLoan()
     {
@@ -89,15 +49,11 @@ class LoanApproval extends Component
             'loan_end_date' => $this->loan_end_date,
         ]);
 
-        $this->validate([
-            'cylinder_type' => 'required|exists:cylinder_types,id',
-            'loan_required_amount' => 'required|string',
-            'loan_payment_plan' => 'required|string',
-            'loan_end_date' => [
-                'required',
-                'date',
-                'after:' . now()->addYear()->format('Y-m-d'),
-            ],
+        $this->validateOnly([
+            'cylinder_type',
+            'loan_required_amount',
+            'loan_payment_plan',
+            'loan_end_date',
         ]);
         Log::info('Validation passed');
 
@@ -132,6 +88,9 @@ class LoanApproval extends Component
             DB::commit();
             Log::info('Database transaction committed');
 
+            // Send SMS notification
+            $this->sendApprovalNotification($this->loan->user, $this->loan);
+
             session()->flash('message', 'Loan approved successfully.');
             Log::info('Redirecting to home');
             return $this->redirect('/');
@@ -153,13 +112,11 @@ class LoanApproval extends Component
 
     public function rejectLoan()
     {
-        $this->validate([
-            'rejection_reason' => 'required|string|min:5'
-        ]);
+        $this->validateOnly(['rejection_reason']);
 
         $updated = $this->loan->update([
             'status' => 'rejected',
-            'rejection_reason' => $this->rejection_reason
+            'rejection_reason' => $this->rejection_reason,
         ]);
         Log::info('Loan rejection update', ['updated' => $updated]);
 
@@ -168,10 +125,42 @@ class LoanApproval extends Component
         return $this->redirect('/');
     }
 
+    /**
+     * Send SMS notification to the user after loan approval.
+     *
+     * @param \App\Models\User $user
+     * @param \App\Models\Loan $loan
+     */
+    protected function sendApprovalNotification($user, $loan)
+    {
+        try {
+            if (empty($user->phone_number)) {
+                Log::warning('User phone number missing for SMS notification', ['user_id' => $user->id, 'loan_id' => $loan->id]);
+                return;
+            }
+
+            $sms = new SendSms();
+            $message = "Habari {$user->first_name}, mkopo wako umeidhinishwa! Tutawasiliana nawe ndani ya siku 7 kwa ajili ya usakinishaji wa silinda. Tafadhali leta nyaraka zote za lazima unapokuja ofisini.";
+            $success = $sms->send($user->id, $message);
+
+            if ($success) {
+                Log::info('SMS notification sent successfully', ['user_id' => $user->id, 'loan_id' => $loan->id]);
+            } else {
+                Log::error('Failed to send SMS notification', ['user_id' => $user->id, 'loan_id' => $loan->id]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sending SMS notification: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'loan_id' => $loan->id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
+
     public function render()
     {
         return view('livewire.loan-approval', [
-            'cylinders' => CylinderType::all()
+            'cylinders' => CylinderType::all(),
         ]);
     }
 }
