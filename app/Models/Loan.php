@@ -16,6 +16,7 @@ class Loan extends Model
 
     protected $appends = [
         'time_to_next_payment',
+        'due_date',
     ];
 
     protected $fillable = [
@@ -57,6 +58,12 @@ class Loan extends Model
             ? $today->diffInDays($nextPaymentDate, false) // Returns negative if overdue
             : null;
     }
+
+    public function getDueDateAttribute()
+    {
+        return $this->calculateNextPaymentDate();
+    }
+
 
     protected function calculateNextPaymentDate()
     {
@@ -126,4 +133,25 @@ class Loan extends Model
             ->with(['user', 'payments'])
             ->get();
     }
+
+    public function governmentGuarantor()
+    {
+        return $this->hasOne(GovernmentGuarantor::class);
+    }
+
+    public function privateGuarantor()
+    {
+        return $this->hasOne(PrivateGuarantor::class);
+    }
+
+    public function reminderLogs()
+    {
+        return $this->hasMany(RepaymentReminderLog::class);
+    }
+
+    public function loanPackage()
+    {
+        return $this->belongsTo(LoanPackage::class);
+    }
+
 }

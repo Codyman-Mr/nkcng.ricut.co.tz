@@ -10,17 +10,30 @@ class Payment extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'loan_id',
+        'user_id',
+        'paid_amount',
+        'transaction_id',
+        'external_id',
+        'status',
+        'provider',
+        'callback_data',
+        'payment_method',
+        'payment_date',
+    ];
+
+    protected $casts = [
+        'callback_data' => 'array',
+    ];
+
     public function loan()
     {
         return $this->belongsTo(Loan::class);
     }
 
-    protected $fillable = [
-        'loan_id',
-        'users_id',
-        'payment_date',
-        'paid_amount',
-        'payment_method',
-        'payment_description',
-    ];
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property int $loan_id
@@ -28,9 +28,15 @@ use Illuminate\Database\Eloquent\Model;
  */
 class LoanDocument extends Model
 {
-    use HasFactory;
+    protected $table = 'loan_documents';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'loan_id',
+        'document_type',
+        'document_path',
+        'created_at',
+        'updated_at',
+    ];
 
     public function loan()
     {

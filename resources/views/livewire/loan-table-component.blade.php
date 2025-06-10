@@ -43,8 +43,7 @@
                                                         </span>
 
                                                         {{-- 🟢 This is the key: wire:model.live updates the Livewire property --}}
-                                                        <input type="text" id="search-loans"
-                                                            wire:model.live="search"
+                                                        <input type="text" id="search-loans" wire:model.live="search"
                                                             class="w-full py-2.5 ps-10 pe-24 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-gray-500 focus:border-gray-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-gray-500 dark:focus:border-gray-500"
                                                             placeholder="Search loans..." />
 
@@ -376,10 +375,10 @@
 
 
 
-                                                                                        <!-- Add Payment -->
+                                                                                        <!-- Add Payment Button -->
                                                                                         <x-button.outline color="green"
                                                                                             icon="icons.plus"
-                                                                                            onclick='$("#createModal").modal(`show`)'>
+                                                                                            wire:click="openPaymentModal({{ $loan->id }})">
                                                                                             Add Payment
                                                                                         </x-button.outline>
 
@@ -440,6 +439,74 @@
         </div>
 
 
+
+
+        <!-- Payment Modal -->
+        @if ($showPaymentModal)
+            <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                    <h2 class="text-lg font-semibold mb-4 text-gray-800">Add Payment</h2>
+                    <form wire:submit.prevent="addPayment">
+                        <div class="mb-4">
+                            <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Phone
+                                Number</label>
+                            <input type="text" wire:model="phoneNumber" id="phoneNumber"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            @error('phoneNumber')
+                                <span class="text-red-500 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="mb-4">
+                            <label for="provider" class="block text-sm font-medium text-gray-700">Payment
+                                Provider</label>
+                            <select wire:model="provider" id="provider"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Provider</option>
+                                <option value="Mpesa">Mpesa</option>
+                                <option value="TigoPesa">TigoPesa</option>
+                                <option value="AirtelMoney">AirtelMoney</option>
+                                <option value="HaloPesa">HaloPesa</option>
+                            </select>
+                            @error('provider')
+                                <span class="text-red-500 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="mb-4">
+                            <label for="paymentAmount" class="block text-sm font-medium text-gray-700">Payment Amount
+                                (TZS)</label>
+                            <input type="number" wire:model="paymentAmount" id="paymentAmount"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                min="1000" step="1">
+                            @error('paymentAmount')
+                                <span class="text-red-500 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="flex space-x-4">
+                            <button type="submit"
+                                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                Confirm Payment
+                            </button>
+                            <button type="button" wire:click="closePaymentModal"
+                                class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
+
+        <!-- Feedback Messages -->
+        @if (session()->has('message'))
+            <div class="mt-4 p-4 bg-green-100 text-green-700 rounded">
+                {{ session('message') }}
+            </div>
+        @endif
+        @if (session()->has('error'))
+            <div class="mt-4 p-4 bg-red-100 text-red-700 rounded">
+                {{ session('error') }}
+            </div>
+        @endif
     </div>
 
 

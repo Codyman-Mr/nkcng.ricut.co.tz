@@ -38,7 +38,7 @@
                                     @endforeach
                                 </tbody>
                             </table> --}}
-                            <livewire:scheduled-reminder-manager/> 
+                            {{-- <livewire:scheduled-reminder-manager/> --}}
                         {{-- @else
                             <div x-data x-init="lottie.loadAnimation({
                                 container: $el,
@@ -51,6 +51,9 @@
                             <p class="text-center text-gray-600 dark:text-gray-300 text-2xl">Nothing to display yet.</p>
 
                         @endunless --}}
+
+                            <livewire:repayment-alerts-view />
+
                     </div>
                 </div>
             </div>

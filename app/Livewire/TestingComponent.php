@@ -120,9 +120,10 @@ class TestingComponent extends Component
             'paymentMethodsPie' => $paymentMethodsPie,
             'paymentMethodsTotalPie' => $paymentMethodsPieTotals,
             'paymentMethodsPieLabels' => $paymentMethodsPieLabels,
-            'filteredLoans' => $filteredLoans
+            'filteredLoans' => $filteredLoans,
+
         ];
 
-        return view('livewire.testing-component', $reportData);
+        return view('livewire.testing-component', $reportData, );
     }
 }

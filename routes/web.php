@@ -74,3 +74,10 @@ Route::get('/installations', [InstallationController::class, 'index'])->name('in
 Route::get('/approve-installation/{installationId}', [InstallationController::class, 'approveInstallation'])->name('approve-installation')->middleware('auth');
 
 Route::post('/approve-installation/{installationId}', [InstallationController::class, 'updateInstallation'])->name('approve-installation.update')->middleware('auth');
+
+
+
+
+
+Route::post('/payment/initiate', [PaymentController::class, 'initiatePayment'])->name('payment.initiate');
+Route::post('/payment/callback', [PaymentController::class, 'handleCallback'])->name('payment.callback');

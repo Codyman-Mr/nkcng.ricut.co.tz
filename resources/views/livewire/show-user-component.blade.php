@@ -1,52 +1,67 @@
 <div class="grid grid-cols-1 auto-rows-auto gap-4 md:grid-cols-3 md:grid-rows-3 md:gap-4 h-full p-4">
     <!-- Sidebar (divs 1 & 4) -->
     <div class="bg-transparent md:col-span-1 md:row-span-3 flex items-center justify-center p-4">
-        <div class="bg-white w-full h-full rounded-xl shadow-sm p-4 flex flex-col justify-between">
-            <!-- Top Section: Title, Avatar, Info -->
-            <div class="space-y-6">
-                <!-- Title -->
-                <h2 class="text-2xl font-bold text-gray-800 text-center">Personal Details</h2>
+    <div class="bg-white w-full h-full rounded-xl shadow-sm p-4 flex flex-col justify-between">
+        <!-- Top Section: Title, Avatar, Info -->
+        <div class="space-y-6">
+            <!-- Title -->
+            <h2 class="text-2xl font-bold text-gray-800 text-center">Personal Details</h2>
 
-                <!-- Avatar with Edit Icon -->
-                <div class="flex justify-center">
-                    <div class="relative">
-                        <!-- Avatar (replace initials with <img> if image exists) -->
-                        <div
-                            class="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center text-2xl font-bold text-white overflow-hidden">
-                            JD
-                        </div>
-
-                        <!-- Edit Icon -->
-                        <label for="avatar-upload"
-                            class="absolute bottom-0 right-0 bg-gray-600 p-1 rounded-full cursor-pointer hover:bg-gray-700 transition">
-                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path
-                                    d="M17.414 2.586a2 2 0 010 2.828L9 13.828l-4 1 1-4 8.414-8.414a2 2 0 012.828 0z" />
-                            </svg>
-                        </label>
-                        <input id="avatar-upload" type="file" class="hidden" />
+            <!-- Avatar with Edit Icon -->
+            <div class="flex justify-center">
+                <div class="relative">
+                    <!-- Avatar (replace initials with <img> if image exists) -->
+                    <div class="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center text-2xl font-bold text-white overflow-hidden">
+                        {{ strtoupper(substr($user->first_name, 0, 1) . substr($user->last_name, 0, 1)) }}
                     </div>
-                </div>
 
-                <!-- User Info Fields -->
-                <div class="space-y-3 text-sm text-gray-800">
-                    <div><span class="font-semibold text-gray-500">Name:</span>
-                        {{ $user->first_name . ' ' . $user->last_name }}</div>
-                    <div><span class="font-semibold text-gray-500">Phone:</span> {{ $user->phone_number }}</div>
-                    <div><span class="font-semibold text-gray-500">Gender:</span> {{ $user->gender }}</div>
-                    <div><span class="font-semibold text-gray-500">Date of Birth:</span> {{ $user->dob }}</div>
-                    <div><span class="font-semibold text-gray-500">NIDA:</span> {{ $user->nida_number }}</div>
-                    <div><span class="font-semibold text-gray-500">Address:</span> {{ $user->address }}</div>
+                    <!-- Edit Icon -->
+                    <label for="avatar-upload"
+                        class="absolute bottom-0 right-0 bg-gray-600 p-1 rounded-full cursor-pointer hover:bg-gray-700 transition">
+                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.414 2.586a2 2 0 010 2.828L9 13.828l-4 1 1-4 8.414-8.414a2 2 0 012.828 0z" />
+                        </svg>
+                    </label>
+                    <input id="avatar-upload" type="file" class="hidden" />
                 </div>
             </div>
 
-            <!-- Edit Button at Bottom -->
-            <button class="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition">
-                Edit Details
-            </button>
+            <!-- User Info Fields -->
+            <div class="space-y-3 text-sm text-gray-800">
+                <div><span class="font-semibold text-gray-500">Name:</span> {{ $user->first_name . ' ' . $user->last_name }}</div>
+                <div><span class="font-semibold text-gray-500">Phone:</span> {{ $user->phone_number }}</div>
+                <div><span class="font-semibold text-gray-500">Gender:</span> {{ $user->gender }}</div>
+                <div><span class="font-semibold text-gray-500">Date of Birth:</span> {{ $user->dob }}</div>
+                <div><span class="font-semibold text-gray-500">NIDA:</span> {{ $user->nida_number }}</div>
+                <div><span class="font-semibold text-gray-500">Address:</span> {{ $user->address }}</div>
+            </div>
+
+            <!-- Loan Documents (if approved loan exists) -->
+            @if ($loan && $loan->status === 'approved' && !empty($documents))
+                <div class="space-y-3">
+                    <h3 class="text-lg font-semibold text-gray-800">Loan Documents</h3>
+                    <ul class="space-y-2 text-sm text-gray-800">
+                        @foreach ($documents as $document)
+                            <li>
+                                <a href="{{ Storage::url($document->document_path) }}"
+                                   target="_blank"
+                                   class="text-blue-600 hover:underline">
+                                    {{ $document->display_name }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
         </div>
 
+        <!-- Edit Button at Bottom -->
+        <button class="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition"
+                wire:click="toggleEdit">
+            Edit Details
+        </button>
     </div>
+</div>
 
     <!-- Map area (divs 2,3,5,6) -->
     <div class="bg-gray-300 md:col-span-2 md:row-span-2 flex items-center justify-center rounded-lg py-4">
@@ -88,8 +103,16 @@
             @elseif ($loan->status === 'pending')
                 <div class="space-y-1 text-sm text-gray-800 mt-3">
                     <div><span class="font-semibold text-gray-500">Loan Pending Validation</span></div>
-                    <button class="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition"
-                        type="button" wire:click=''> Validate </button>
+                    <div class="space-y-1 text-sm text-gray-800 mt-3">
+                        <div>
+                            <span class="font-semibold text-gray-500">Loan Pending Validation</span>
+                        </div>
+                        <a href="{{ route('show-loan', ['loan' => $loan->id]) }}"
+                            class="block text-center w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition">
+                            Validate
+                        </a>
+                    </div>
+
                 </div>
             @elseif ($loan->status === 'rejected')
                 <div class="space-y-1 text-sm text-gray-800 mt-3">

@@ -8,7 +8,7 @@
     <div class="flex flex-col gap-y-4">
         <div>
             <label for="recipients" class="block text-sm font-medium text-gray-700">Recipients</label>
-            <input type="text" wire:model="recipients" id="recipients" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Enter User IDs or phone numbers, comma-separated">
+            <input type="text" wire:model="recipients" id="recipients" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Enter User IDs or phone numbers (+255######### or 07########), comma-separated">
             @error('recipients') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
@@ -18,7 +18,12 @@
             @error('message') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
-        <!-- Updated button to pass recipients and message correctly -->
+        <div>
+            <label for="loanId" class="block text-sm font-medium text-gray-700">Loan ID (optional)</label>
+            <input type="number" wire:model="loanId" id="loanId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Enter Loan ID for reminder">
+            @error('loanId') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+        </div>
+
         <button wire:click="sendMessage" class="btn btn-primary">Send SMS</button>
     </div>
 </div>

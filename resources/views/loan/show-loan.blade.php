@@ -8,7 +8,7 @@
 
     <div class="max-w-6xl mx-auto p-6 space-y-6">
 
-  
+
         <livewire:loan-approval :loan="$loan" />
 
         @if ($errors->any())
@@ -26,6 +26,5 @@
 
 
 
-    </div>
 
 @endsection

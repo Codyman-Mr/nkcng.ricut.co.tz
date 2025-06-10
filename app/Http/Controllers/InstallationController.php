@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Installation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Models\Loan;
 
 class InstallationController extends Controller
 {
@@ -95,6 +96,8 @@ class InstallationController extends Controller
     {
         $installation = Installation::find($installationId);
 
+        $loan = $installation->loan ?? null;
+
         if (!$installation) {
             Log::error('Installation not found for update', ['installation_id' => $installationId]);
             return redirect()->route('users.index')
@@ -119,6 +122,17 @@ class InstallationController extends Controller
             'status' => $request->status,
             'updated_at' => now(),
         ]);
+
+        if ($loan) {
+            $loan->update([
+                'loan_start_date' => now(),
+            ]);
+        } else {
+            Log::error('No loan associated with installation ID: ' . $installation->id);
+        }
+
+
+        
 
         Log::info('Installation updated', [
             'installation_id' => $installation->id,

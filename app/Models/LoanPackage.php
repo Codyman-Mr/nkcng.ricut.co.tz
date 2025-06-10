@@ -26,5 +26,11 @@ class LoanPackage extends Model
         return $this->hasOne(CylinderType::class, 'loan_package_id');
     }
 
+    public function loans()
+    {
+        return $this->hasMany(Loan::class);
+    }
+
+
 
 }

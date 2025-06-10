@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use AfricasTalking\SDK\AfricasTalking;
+use App\Models\Location;
 
 class AuthController extends Controller
 {
@@ -26,7 +27,6 @@ class AuthController extends Controller
 
     public function dashboard()
     {
-
         // Get all payments with their associated loans
         $payments = Payment::with('loan')->get();
 
@@ -41,19 +41,48 @@ class AuthController extends Controller
 
         $loan = $this->loan;
 
-        // statuses
-
-
-        // Fetch loans that are near their end date
-        $nearEndLoans = Loan::whereNotNull('loan_end_date') // Ensure the end date exists
-            ->whereDate('loan_end_date', '>', now()) // Filter loans with end date in the future
-            ->orderBy('loan_end_date', 'asc') // Sort by nearest end date
-            ->take(12) // Limit to 12 records
-            ->with('user') // Include the user associated with the loan
+        // Loans nearing end date
+        $nearEndLoans = Loan::whereNotNull('loan_end_date')
+            ->whereDate('loan_end_date', '>', now())
+            ->orderBy('loan_end_date', 'asc')
+            ->with('user')
             ->paginate(10);
 
-        return view('dashboard.index', compact('payments', 'user', 'totalLoanAmount', 'users', 'nearEndLoans', 'loan'));
+        // Payments due within 7 days (based on time_to_next_payment attribute)
+        $paymentsThisWeek = Loan::with('user')
+            ->get()
+            ->filter(function ($loan) {
+                $days = $loan->time_to_next_payment;
+                return is_numeric($days) && $days >= 0 && $days <= 7;
+            });
+
+        // Missed payments (time_to_next_payment is negative)
+        $missedPayments = Loan::with('user')
+            ->get()
+            ->filter(function ($loan) {
+                $days = $loan->time_to_next_payment;
+                return is_numeric($days) && $days < 0;
+            });
+
+        $locations = Location::with([
+            'gpsDevice.user.loans',
+            'gpsDevice.customerVehicle'
+        ])->get();
+
+
+        return view('dashboard.index', compact(
+            'payments',
+            'user',
+            'totalLoanAmount',
+            'users',
+            'loan',
+            'nearEndLoans',
+            'paymentsThisWeek',
+            'missedPayments',
+            'locations'
+        ));
     }
+
 
 
     public function registrationPage()
@@ -119,7 +148,7 @@ class AuthController extends Controller
     }
 
 
-    
+
 
 
     public function verificationPage(Request $request)

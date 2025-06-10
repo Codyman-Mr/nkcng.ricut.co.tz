@@ -41,22 +41,9 @@ class InstallationsTableComponent extends Component
         // Apply search filter
         if ($this->search) {
             $searchTerm = '%' . Str::lower($this->search) . '%';
-            // $query->where(function ($q) use ($searchTerm) {
-            //     $q->whereRaw('LOWER(id) LIKE ?', [$searchTerm])
-            //         ->orWhereRaw('LOWER(status) LIKE ?', [$searchTerm])
-            //         ->orWhereRaw('LOWER(payment_type) LIKE ?', [$searchTerm])
-            //         ->orWhereHas('customerVehicle.user', function ($q) use ($searchTerm) {
-            //             $q->whereRaw('LOWER(name) LIKE ?', [$searchTerm]);
-            //         })
-            //         ->orWhereHas('customerVehicle', function ($q) use ($searchTerm) {
-            //             $q->whereRaw('LOWER(plate_number) LIKE ?', [$searchTerm]);
-            //         })
-            //         ->orWhereHas('cylinderType', function ($q) use ($searchTerm) {
-            //             $q->whereRaw('LOWER(name) LIKE ?', [$searchTerm]);
-            //         });
-            // });
+            
 
-            $query->searchLike(['id', 'status', 'payment_type', 'customerVehicle.user.first_name', 'assignment_status'], $searchTerm)->get();
+            $query->searchLike(['id', 'status', 'payment_type', 'customerVehicle.user.first_name', ], $searchTerm)->get();
         }
 
         // Apply status filter

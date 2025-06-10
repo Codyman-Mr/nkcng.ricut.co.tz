@@ -12,11 +12,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // Add this line to schedule daily reminders
-        $schedule->command('loans:send-reminders')->dailyAt('08:00'); // every day at 8am
-        $schedule->command('reminders:send')->dailyAt('08:00');
-
+        $schedule->command('repayment:send-reminders')->dailyAt('08:00');
     }
+
 
     /**
      * Register the commands for the application.

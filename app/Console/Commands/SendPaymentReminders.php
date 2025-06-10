@@ -8,27 +8,67 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Jobs\SendSmsJob;
 
 class SendPaymentReminders extends Command
 {
     protected $signature = 'reminders:send';
     protected $description = 'Send automatic payment reminders based on payment plans';
 
+    // public function handle()
+    // {
+    //     $loans = Loan::with(['user', 'payments'])
+    //         ->where('status', 'active')
+    //         ->get()
+    //         ->filter(function ($loan) {
+    //             $nextDueDate = $this->calculateNextDueDate($loan);
+    //             return Carbon::now()->addDay()->isSameDay($nextDueDate);
+    //         });
+
+    //     foreach ($loans as $loan) {
+    //         $this->sendReminder($loan);
+    //     }
+
+    //     $this->info('Sent ' . $loans->count() . ' payment reminders');
+    // }
+
+
     public function handle()
     {
-        $loans = Loan::with(['user', 'payments'])
+        $today = Carbon::today();
+
+        $loans = Loan::with(['user', 'loanPackage', 'payments'])
             ->where('status', 'active')
-            ->get()
-            ->filter(function ($loan) {
-                $nextDueDate = $this->calculateNextDueDate($loan);
-                return Carbon::now()->addDay()->isSameDay($nextDueDate);
-            });
+            ->get();
 
         foreach ($loans as $loan) {
-            $this->sendReminder($loan);
-        }
+            $nextDueDate = $this->calculateNextDueDate($loan);
+            $daysUntilDue = $today->diffInDays($nextDueDate, false);
 
-        $this->info('Sent ' . $loans->count() . ' payment reminders');
+            if (in_array($daysUntilDue, [3, 0, -1])) {
+                $totalPaid = $loan->payments->sum('paid_amount');
+                $remainingAmount = $loan->loanPackage->amount_to_finance - $totalPaid;
+
+                $paymentPlan = $loan->payment_plan;
+                $totalWeeks = match ($paymentPlan) {
+                    'weekly' => 1,
+                    'bi-weekly' => 2,
+                    'monthly' => 4,
+                    default => 1,
+                };
+
+                $installmentAmount = $remainingAmount / $totalWeeks;
+                $installmentAmount = round($installmentAmount, 2);
+
+                $message = match ($daysUntilDue) {
+                    3 => "Habari {$loan->user->first_name}, kumbuka kulipa TZS {$installmentAmount} kwa mkopo wako #{$loan->id} ifikapo {$nextDueDate->format('d/m/Y')}.",
+                    0 => "Habari {$loan->user->first_name}, leo ni siku ya mwisho kulipa TZS {$installmentAmount} kwa mkopo wako #{$loan->id}. Tafadhali lipa leo.",
+                    -1 => "Habari {$loan->user->first_name}, umekosa kulipa TZS {$installmentAmount} kwa mkopo wako #{$loan->id} jana. Tafadhali lipa haraka iwezekanavyo.",
+                };
+
+                SendSmsJob::dispatch($loan->user->phone_number, $message, $loan->id);
+            }
+        }
     }
 
     public function convertPhoneNumberToInternationalFormat(string $phoneNumber)

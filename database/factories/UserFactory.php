@@ -32,7 +32,7 @@ class UserFactory extends Factory
             'nida_number' => fake()->numerify('####################'),
             'address' => fake()->address(),
 
-            'password' => bcrypt('password'),
+            'password' => '$2y$12$gNuGvZyWG4/NoqHsv2gWt.gZZBMc3evrwSKSNeynwIh9YAzCiEtoO',
             'verification_code' => fake()->numberBetween(100000, 999999),
         ];
     }

@@ -28,10 +28,10 @@
                                 @if ($payment->loan->user_id == Auth::id())
                                     <tr class="bg-white border-b cursor-pointer" style="cursor: pointer;">
                                         <td scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">
-                                            {{ \Carbon\Carbon::parse($payment->loan?->user?->first_name)->format('d F Y') }}
+                                            {{-- {{ \Carbon\Carbon::parse($payment->loan?->user?->first_name)->format('d F Y') }} --}}
                                         </td>
                                         <td scope="col" class="px-6 py-3" style="width: 17rem; font-weight:600;">
-                                            {{ \Carbon\Carbon::parse($payment->loan?->user?->customer_vehicles->plate_number)->format('d F Y') }}
+                                            {{-- {{ \Carbon\Carbon::parse($payment->loan?->user?->customer_vehicles->plate_number)->format('d F Y') }} --}}
                                         </td>
                                         <td class="py-4">
                                             {{ \Carbon\Carbon::parse($payment->payment_date)->format('d F Y') }}</td>
@@ -47,7 +47,7 @@
                         <h3 class="text-3xl font-bold text-gray-900"> Your request is pending approval </h3>
                         <h3 class="text-3xl font-bold text-gray-900"> Please wait </h3>
 
-                        <div class="h-full w-full"> 
+                        <div class="h-full w-full">
                             <lottie-player src="{{ asset('lottie/pending-animation.json') }}" background="transparent"
                                 speed="1" loop autoplay></lottie-player>
                         </div>

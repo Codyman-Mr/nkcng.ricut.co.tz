@@ -17,6 +17,7 @@ class TestingController extends Controller{
     }
 
     public function index(){
-        return view('misc.testing');
+        $loans = Loan::all();
+        return view('misc.testing', compact('loans'));
     }
 }
