@@ -8,6 +8,7 @@
         $userId = Auth::id();
         $canApplyLoan =
             \DB::table('loans')->where('user_id', $userId)->doesntExist() ||
+            \DB::table('users')->where('role','admin')->exists()||
             \DB::table('loans')->where('user_id', $userId)->where('status', 'rejected')->exists();
         // Session-based user ID check to detect new logins
         $sessionUserId = session('current_user_id', $userId);
