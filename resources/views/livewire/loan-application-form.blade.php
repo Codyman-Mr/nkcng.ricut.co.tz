@@ -51,21 +51,21 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
                     <input type="text" value="{{ $borrower->first_name ?? $borrower->name }}"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100" readonly>
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100" >
                 </div>
 
                 <!-- Last Name (Read-only from Auth::user()) -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
                     <input type="text" value="{{ $borrower->last_name ?? '' }}"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100" readonly>
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100" >
                 </div>
 
                 <!-- Phone Number (Read-only from Auth::user()) -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                     <input type="text" value="{{ $borrower->phone_number ?? '' }}"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100" readonly>
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100" >
                 </div>
 
                 <!-- Date of Birth -->
