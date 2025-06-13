@@ -27,6 +27,7 @@ class LoanTableComponent extends Component
     public $provider;
     public $paymentAmount;
     public $showPaymentModal = false;
+    public $isLoading = false;
 
     protected $updatesQueryString = ['search', 'sortField', 'sortDirection'];
     protected $listeners = ['confirm-send-reminder' => 'sendReminder'];
@@ -44,7 +45,7 @@ class LoanTableComponent extends Component
     {
         $this->selectedLoanId = $loanId;
         $this->showPaymentModal = true;
-        $this->reset(['paymentAmount', 'phoneNumber', 'provider']);
+        $this->reset(['paymentAmount', 'phoneNumber', 'provider', 'isLoading']);
         $loan = Loan::find($loanId);
         if ($loan && $loan->user) {
             $this->phoneNumber = $loan->user->phone_number;
@@ -56,7 +57,7 @@ class LoanTableComponent extends Component
     public function closePaymentModal()
     {
         $this->showPaymentModal = false;
-        $this->reset(['paymentAmount', 'phoneNumber', 'provider', 'selectedLoanId']);
+        $this->reset(['paymentAmount', 'phoneNumber', 'provider', 'selectedLoanId', 'isLoading']);
         $this->resetValidation();
         Log::info('Closed payment modal');
     }
@@ -64,6 +65,8 @@ class LoanTableComponent extends Component
     public function addPayment()
     {
         $this->validate();
+        $this->isLoading = true;
+        $this->dispatch('payment-processing'); // Debugging event
 
         Log::info('Adding payment', [
             'loan_id' => $this->selectedLoanId,
@@ -81,19 +84,30 @@ class LoanTableComponent extends Component
             $normalizedPhoneNumber = $this->normalizePhoneNumber($this->phoneNumber);
             InitiatePaymentJob::dispatch($loan->id, $this->paymentAmount, $normalizedPhoneNumber, $this->provider);
 
-            session()->flash('message', 'Payment initiated successfully. You will be notified once processed.');
-            $this->closePaymentModal();
-
             $recipients = [$normalizedPhoneNumber];
             $message = "Payment of TZS {$this->paymentAmount} for Loan #{$loan->id} has been initiated.";
             SendSmsJob::dispatch($recipients, $message, $loan->id);
             Log::info('SMS job dispatched', ['loan_id' => $loan->id, 'recipients' => $recipients]);
+
+            session()->flash('message', 'Payment initiated successfully. You will be notified once processed.');
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Payment initiated successfully. You will be notified once processed.'
+            ]);
+            $this->closePaymentModal();
         } catch (\Exception $e) {
             Log::error('Failed to add payment: ' . $e->getMessage(), [
                 'loan_id' => $this->selectedLoanId,
                 'trace' => $e->getTraceAsString(),
             ]);
             session()->flash('error', 'Failed to initiate payment: ' . $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Failed to initiate payment: ' . $e->getMessage()
+            ]);
+        } finally {
+            $this->isLoading = false;
+            $this->dispatch('payment-processed'); // Debugging event
         }
     }
 
@@ -232,12 +246,12 @@ class LoanTableComponent extends Component
                 'Content-Type' => 'application/x-www-form-urlencoded',
                 'apiKey' => config('services.africastalking.api_key'),
             ])->asForm()->post('https://api.africastalking.com/version1/messaging', [
-                'username' => config('services.africastalking.username'),
-                'to' => $phoneNumber,
-                'from' => 'NK CNG',
-                'message' => $message,
-                'enqueue' => 1,
-            ]);
+                        'username' => config('services.africastalking.username'),
+                        'to' => $phoneNumber,
+                        'from' => 'NK CNG',
+                        'message' => $message,
+                        'enqueue' => 1,
+                    ]);
             if ($response->successful()) {
                 Log::info('SMS sent successfully to ' . $loan->user->first_name . ' at ' . $phoneNumber);
                 $this->dispatch('notify', [
