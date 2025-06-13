@@ -7,14 +7,20 @@
 // use App\Models\Installation;
 // use App\Models\Loan;
 // use App\Models\Payment;
+// use App\Models\LoanDocument;
+// use App\Models\User;
 // use App\Events\PaymentStatusUpdated;
 // use Illuminate\Support\Facades\DB;
 // use Illuminate\Support\Facades\Log;
+// use Illuminate\Support\Facades\Storage;
 // use Livewire\Component;
+// use Livewire\WithFileUploads;
 // use App\Models\CylinderType;
 
 // class LoanApproval extends Component
 // {
+//     use WithFileUploads;
+
 //     public $loan;
 //     public $loanId;
 //     public $cylinderType;
@@ -28,8 +34,16 @@
 //     public $showRejectModal = false;
 //     public $rejection_reason = '';
 //     public $cylinders;
-
 //     public $loanInstallationId;
+//     public $documents = [
+//         'mktaba_wa_mkopo' => null,
+//         'kitambulisho_mwomba_mbele' => null,
+//         'kitambulisho_mdhamini_1_mbele' => null,
+//         'kitambulisho_mdhamini_2_mbele' => null,
+//         'leseni_mwomba' => null,
+//         'kadi_ya_usafiri' => null,
+//         'barua_ya_utambulisho' => null,
+//     ];
 
 //     public function rules()
 //     {
@@ -42,6 +56,13 @@
 //             'phoneNumber' => ['required', 'string', 'regex:/^(\+255|0)[0-9]{9}$/'],
 //             'provider' => 'required|in:Mpesa,TigoPesa,AirtelMoney,HaloPesa',
 //             'rejection_reason' => 'required_if:showRejectModal,true|string|min:5|max:1000',
+//             'documents.mktaba_wa_mkopo' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
+//             'documents.kitambulisho_mwomba_mbele' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
+//             'documents.kitambulisho_mdhamini_1_mbele' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
+//             'documents.kitambulisho_mdhamini_2_mbele' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
+//             'documents.leseni_mwomba' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
+//             'documents.kadi_ya_usafiri' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
+//             'documents.barua_ya_utambulisho' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
 //         ];
 //     }
 
@@ -59,6 +80,80 @@
 //         $this->paymentAmount = $loan->loan_required_amount ? $loan->loan_required_amount / 10 : null;
 //         $this->provider = 'Mpesa';
 //         $this->cylinders = CylinderType::all();
+//         Log::info('LoanApproval component mounted', [
+//             'loan_id' => $this->loanId,
+//             'user_id' => $this->loan->user ? $this->loan->user->id : null,
+//             'has_user' => !is_null($this->loan->user),
+//         ]);
+//     }
+
+//     public function uploadDocuments()
+//     {
+//         $this->validateOnly('documents.*');
+//         Log::info('Document upload started', ['loan_id' => $this->loanId]);
+
+//         try {
+//             DB::beginTransaction();
+//             $userName = str_replace(' ', '_', strtolower($this->loan->user->name ?? 'user_' . $this->loanId));
+//             $timestamp = now()->format('YmdHis');
+
+//             Storage::disk('public')->makeDirectory('client-documents');
+//             $diskPath = Storage::disk('public')->path('');
+//             Log::info('Storage disk info', [
+//                 'loan_id' => $this->loanId,
+//                 'disk_path' => $diskPath,
+//                 'directory_exists' => Storage::disk('public')->exists('client-documents'),
+//             ]);
+
+//             foreach ($this->documents as $key => $file) {
+//                 if ($file) {
+//                     $extension = $file->getClientOriginalExtension();
+//                     $fileName = "{$userName}_{$key}_{$timestamp}.{$extension}";
+//                     $path = $file->storeAs('client-documents', $fileName, 'public');
+
+//                     $fileExists = Storage::disk('public')->exists($path);
+//                     $absolutePath = storage_path('app/public/' . $path);
+//                     Log::info('Document storage attempt', [
+//                         'loan_id' => $this->loanId,
+//                         'document_type' => $key,
+//                         'file_name' => $fileName,
+//                         'path' => $path,
+//                         'absolute_path' => $absolutePath,
+//                         'file_exists' => $fileExists,
+//                     ]);
+
+//                     if (!$fileExists) {
+//                         throw new \Exception("Failed to store file: {$fileName}");
+//                     }
+
+//                     LoanDocument::create([
+//                         'loan_id' => $this->loanId,
+//                         'document_type' => $key,
+//                         'document_path' => $path,
+//                         'created_at' => now(),
+//                         'updated_at' => now(),
+//                     ]);
+
+//                     Log::info('Document uploaded', [
+//                         'loan_id' => $this->loanId,
+//                         'document_type' => $key,
+//                         'path' => $path,
+//                     ]);
+//                 }
+//             }
+
+//             DB::commit();
+//             session()->flash('message', 'Documents uploaded successfully.');
+//             $this->reset('documents');
+//             Log::info('Document upload completed', ['loan_id' => $this->loanId]);
+//         } catch (\Exception $e) {
+//             DB::rollback();
+//             Log::error('Document upload error: ' . $e->getMessage(), [
+//                 'loan_id' => $this->loanId,
+//                 'trace' => $e->getTraceAsString(),
+//             ]);
+//             session()->flash('error', 'Failed to upload documents: ' . $e->getMessage());
+//         }
 //     }
 
 //     public function approveLoan()
@@ -80,6 +175,37 @@
 //             DB::beginTransaction();
 //             Log::info('Database transaction started');
 
+//             // Check if all required documents are uploaded
+//             $requiredDocs = [
+//                 'mktaba_wa_mkopo',
+//                 'kitambulisho_mwomba_mbele',
+//                 'kitambulisho_mdhamini_1_mbele',
+//                 'kitambulisho_mdhamini_2_mbele',
+//                 'leseni_mwomba',
+//                 'kadi_ya_usafiri',
+//                 'barua_ya_utambulisho',
+//             ];
+//             $uploadedDocs = LoanDocument::where('loan_id', $this->loanId)->pluck('document_type')->toArray();
+//             $missingDocs = array_diff($requiredDocs, $uploadedDocs);
+//             if (!empty($missingDocs)) {
+//                 throw new \Exception('Missing required documents: ' . implode(', ', $missingDocs));
+//             }
+//             Log::info('Document validation passed', ['loan_id' => $this->loanId]);
+
+//             // Ensure loan has a valid user
+//             if (!$this->loan->user || !$this->loan->user->id) {
+//                 throw new \Exception('No user associated with loan ID: ' . $this->loanId);
+//             }
+//             $user = User::find($this->loan->user->id);
+//             if (!$user) {
+//                 throw new \Exception('User ID ' . $this->loan->user->id . ' does not exist in users table for loan ID: ' . $this->loanId);
+//             }
+//             Log::info('User validation passed', [
+//                 'loan_id' => $this->loanId,
+//                 'user_id' => $this->loan->user->id,
+//                 'user_exists' => !is_null($user),
+//             ]);
+
 //             $this->loan->update([
 //                 'loan_required_amount' => $this->loanRequiredAmount,
 //                 'loan_payment_plan' => $this->loanPaymentPlan,
@@ -95,14 +221,17 @@
 //             DB::commit();
 //             Log::info('Database transaction committed');
 
-//             // Normalize phone number to +255 format
 //             $normalizedPhone = $this->normalizePhoneNumber($this->phoneNumber);
 
-//             // Dispatch payment job asynchronously
+//             Log::info('Initiating payment job', [
+//                 'loan_id' => $this->loanId,
+//                 'user_id' => $this->loan->user->id,
+//                 'amount' => $this->paymentAmount,
+//                 'phone_number' => $normalizedPhone,
+//                 'provider' => $this->provider,
+//             ]);
 //             InitiatePaymentJob::dispatch($this->loanId, $this->paymentAmount, $normalizedPhone, $this->provider);
-//             Log::info('Payment job dispatched', ['loan_id' => $this->loanId, 'phone' => $normalizedPhone]);
 
-//             // Collect recipients (user, private guarantor, government guarantor)
 //             $recipients = [];
 //             if ($this->loan->user && $this->loan->user->phone_number) {
 //                 $recipients[] = $this->normalizePhoneNumber($this->loan->user->phone_number);
@@ -114,11 +243,9 @@
 //                 $recipients[] = $this->normalizePhoneNumber($this->loan->governmentGuarantor->phone_number);
 //             }
 
-//             // Remove duplicates
 //             $recipients = array_unique($recipients);
 
 //             if (!empty($recipients)) {
-//                 // Dispatch SMS job
 //                 $message = "Loan #{$this->loanId} approved! Payment of TZS {$this->paymentAmount} is being processed.";
 //                 SendSmsJob::dispatch($recipients, $message, $this->loanId);
 //                 Log::info('SMS job dispatched', ['loan_id' => $this->loanId, 'recipients' => $recipients]);
@@ -200,6 +327,8 @@
 //     }
 // }
 
+
+
 namespace App\Livewire;
 
 use App\Jobs\InitiatePaymentJob;
@@ -244,10 +373,11 @@ class LoanApproval extends Component
         'kadi_ya_usafiri' => null,
         'barua_ya_utambulisho' => null,
     ];
+    public $uploadedDocumentTypes = [];
 
     public function rules()
     {
-        return [
+        $rules = [
             'cylinderType' => 'required|integer|exists:cylinder_types,id',
             'loanRequiredAmount' => 'required|numeric|min:1000',
             'loanPaymentPlan' => 'required|in:weekly,monthly,quarterly',
@@ -256,14 +386,16 @@ class LoanApproval extends Component
             'phoneNumber' => ['required', 'string', 'regex:/^(\+255|0)[0-9]{9}$/'],
             'provider' => 'required|in:Mpesa,TigoPesa,AirtelMoney,HaloPesa',
             'rejection_reason' => 'required_if:showRejectModal,true|string|min:5|max:1000',
-            'documents.mktaba_wa_mkopo' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
-            'documents.kitambulisho_mwomba_mbele' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
-            'documents.kitambulisho_mdhamini_1_mbele' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
-            'documents.kitambulisho_mdhamini_2_mbele' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
-            'documents.leseni_mwomba' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
-            'documents.kadi_ya_usafiri' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
-            'documents.barua_ya_utambulisho' => 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240',
         ];
+
+        // Only validate document fields that haven't been uploaded yet
+        foreach ($this->documents as $key => $value) {
+            if (!in_array($key, $this->uploadedDocumentTypes)) {
+                $rules["documents.{$key}"] = 'nullable|file|mimes:pdf,png,jpg,jpeg,docx|max:10240';
+            }
+        }
+
+        return $rules;
     }
 
     public function mount(Loan $loan)
@@ -280,10 +412,12 @@ class LoanApproval extends Component
         $this->paymentAmount = $loan->loan_required_amount ? $loan->loan_required_amount / 10 : null;
         $this->provider = 'Mpesa';
         $this->cylinders = CylinderType::all();
+        $this->uploadedDocumentTypes = LoanDocument::where('loan_id', $this->loanId)->pluck('document_type')->toArray();
         Log::info('LoanApproval component mounted', [
             'loan_id' => $this->loanId,
             'user_id' => $this->loan->user ? $this->loan->user->id : null,
             'has_user' => !is_null($this->loan->user),
+            'uploaded_documents' => $this->uploadedDocumentTypes,
         ]);
     }
 
@@ -306,7 +440,7 @@ class LoanApproval extends Component
             ]);
 
             foreach ($this->documents as $key => $file) {
-                if ($file) {
+                if ($file && !in_array($key, $this->uploadedDocumentTypes)) {
                     $extension = $file->getClientOriginalExtension();
                     $fileName = "{$userName}_{$key}_{$timestamp}.{$extension}";
                     $path = $file->storeAs('client-documents', $fileName, 'public');
@@ -334,6 +468,7 @@ class LoanApproval extends Component
                         'updated_at' => now(),
                     ]);
 
+                    $this->uploadedDocumentTypes[] = $key;
                     Log::info('Document uploaded', [
                         'loan_id' => $this->loanId,
                         'document_type' => $key,
@@ -345,7 +480,10 @@ class LoanApproval extends Component
             DB::commit();
             session()->flash('message', 'Documents uploaded successfully.');
             $this->reset('documents');
-            Log::info('Document upload completed', ['loan_id' => $this->loanId]);
+            Log::info('Document upload completed', [
+                'loan_id' => $this->loanId,
+                'uploaded_documents' => $this->uploadedDocumentTypes,
+            ]);
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Document upload error: ' . $e->getMessage(), [
@@ -385,8 +523,7 @@ class LoanApproval extends Component
                 'kadi_ya_usafiri',
                 'barua_ya_utambulisho',
             ];
-            $uploadedDocs = LoanDocument::where('loan_id', $this->loanId)->pluck('document_type')->toArray();
-            $missingDocs = array_diff($requiredDocs, $uploadedDocs);
+            $missingDocs = array_diff($requiredDocs, $this->uploadedDocumentTypes);
             if (!empty($missingDocs)) {
                 throw new \Exception('Missing required documents: ' . implode(', ', $missingDocs));
             }
@@ -523,6 +660,7 @@ class LoanApproval extends Component
     {
         return view('livewire.loan-approval', [
             'cylinders' => $this->cylinders,
+            'uploadedDocumentTypes' => $this->uploadedDocumentTypes,
         ]);
     }
 }
