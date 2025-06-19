@@ -318,8 +318,8 @@
                                                                                         </x-button.outline>
 
                                                                                             <x-button.outline
-                                                                                                color='gray'
-                                                                                                icon="icons.bell"
+                                                                                                color='blue'
+                                                                                                icon="icons.history"
                                                                                                 onclick="window.location.href='/payment-history/{{ $loan->id }}'"
                                                                                                 >
                                                                                                 Payment History
