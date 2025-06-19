@@ -50,21 +50,21 @@
                 <!-- First Name (Read-only from Auth::user()) -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                    <input type="text"
+                    <input type="text" wire:model="first_name"
                         class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100" >
                 </div>
 
                 <!-- Last Name (Read-only from Auth::user()) -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                    <input type="text"
+                    <input type="text" wire:model="last_name"
                         class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100" >
                 </div>
 
                 <!-- Phone Number (Read-only from Auth::user()) -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                    <input type="text" 
+                    <input type="text" wire:model="phone_number"
                         class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100" >
                 </div>
 

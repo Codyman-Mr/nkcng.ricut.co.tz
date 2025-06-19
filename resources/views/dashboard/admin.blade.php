@@ -206,7 +206,7 @@
                                                     @php
                                                         $days = round($payment->time_to_next_payment);
                                                     @endphp
-                                                    <a href="/">
+
                                                     <tr
                                                         class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                         <td class="px-4 py-2">
@@ -217,7 +217,6 @@
                                                             {{ $days }} {{ Str::plural('day', $days) }}
                                                         </td>
                                                     </tr>
-                                                </a>
                                                 @empty
                                                     <tr>
                                                         <td colspan="2"
@@ -326,7 +325,7 @@
                                                                 {{ number_format($loan->loan_required_amount - $loan->payments->sum('paid_amount')) }}
                                                                 Tsh
                                                             </td>
-                                                            <td class="px-6 py-3">
+                                                            {{-- <td class="px-6 py-3">
                                                                 @php
                                                                     $now = Carbon::now();
                                                                     $daysRemaining = $now->floatDiffInDays(
@@ -339,7 +338,34 @@
                                                                             ' day' .
                                                                             (round($daysRemaining) !== 1 ? 's' : '');
                                                                 @endphp
+                                                            </td> --}}
+
+                                                            <td class="px-6 py-3">
+                                                                @php
+
+                                                                    $now = Carbon::now();
+                                                                    $end = Carbon::parse($loan->loan_end_date);
+
+                                                                    $months = intval($now->diffInMonths($end, false));
+                                                                    $days = intval($now->diffInDays($end, false));
+                                                                    $hours = intval($now->diffInHours($end, false));
+
+                                                                    if ($months > 0) {
+                                                                        echo $months .
+                                                                            ' month' .
+                                                                            ($months !== 1 ? 's' : '');
+                                                                    } elseif ($days > 0) {
+                                                                        echo $days . ' day' . ($days !== 1 ? 's' : '');
+                                                                    } elseif ($hours > 0) {
+                                                                        echo $hours .
+                                                                            ' hour' .
+                                                                            ($hours !== 1 ? 's' : '');
+                                                                    } else {
+                                                                        echo 'Expired';
+                                                                    }
+                                                                @endphp
                                                             </td>
+
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
@@ -572,7 +598,7 @@
                     });
 
                     popup.setLngLat([loc.longitude, loc.latitude]).addTo(
-                    map); // optional: open on click too
+                        map); // optional: open on click too
                 });
 
                 markers.push(marker);

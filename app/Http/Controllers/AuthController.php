@@ -41,12 +41,23 @@ class AuthController extends Controller
 
         $loan = $this->loan;
 
-        // Loans nearing end date
-        $nearEndLoans = Loan::whereNotNull('loan_end_date')
+
+        $nearEndLoans = Loan::with('user')
+            ->whereNotNull('loan_end_date')
             ->whereDate('loan_end_date', '>', now())
+            ->where(function ($query) {
+                $query->whereRaw('(
+            SELECT COALESCE(SUM(paid_amount), 0)
+            FROM payments
+            WHERE payments.loan_id = loans.id
+        ) < loans.loan_required_amount');
+            })
             ->orderBy('loan_end_date', 'asc')
-            ->with('user')
             ->paginate(10);
+
+
+
+
 
         // Payments due within 7 days (based on time_to_next_payment attribute)
         $paymentsThisWeek = Loan::with('user')

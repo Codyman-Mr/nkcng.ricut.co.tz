@@ -23,6 +23,10 @@ class LoanApplicationForm extends Component
 
     public $dob;
     public $gender = 'male';
+
+    public $first_name;
+    public $last_name;
+    public $phone_number;
     public $nida_no;
     public $address;
     public $vehicle_name;
@@ -49,6 +53,15 @@ class LoanApplicationForm extends Component
         return [
             'dob' => ['required', 'date', 'before:' . now()->subYears(18)->format('Y-m-d')],
             'gender' => 'required|in:male,female',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'phone_number' => [
+                'required',
+                'string',
+                'max:13',
+                'regex:/^(0|\+255)(6|7|8)\d{8}$/',
+                'unique:users,phone_number',
+            ],
             'nida_no' => 'required|string|max:20',
             'address' => 'required|string|max:255',
             'vehicle_name' => 'required|string|max:255',
@@ -60,7 +73,7 @@ class LoanApplicationForm extends Component
             'gvt_guarantor_phone_number' => [
                 'required',
                 'string',
-                'max:15',
+                'max:13',
                 'regex:/^(0|\+255)(6|7|8)\d{8}$/',
                 'unique:government_guarantors,phone_number',
                 'different:private_guarantor_phone_number',
@@ -77,7 +90,7 @@ class LoanApplicationForm extends Component
             'private_guarantor_phone_number' => [
                 'required',
                 'string',
-                'max:15',
+                'max:13',
                 'regex:/^(0|\+255)(6|7|8)\d{8}$/',
                 'unique:private_guarantors,phone_number',
                 'different:gvt_guarantor_phone_number',
@@ -143,6 +156,9 @@ class LoanApplicationForm extends Component
             1 => array_intersect_key($allRules, array_flip([
                 'dob',
                 'gender',
+                'first_name',
+                'last_name',
+                'phone_number',
                 'nida_no',
                 'address',
                 'loan_package_id',
@@ -307,7 +323,24 @@ class LoanApplicationForm extends Component
             Log::info('Database transaction committed');
 
             // Send SMS notifications
-            $this->sendNotifications($user, $loan, $governmentGuarantor, $privateGuarantor);
+            $this->sendNotifications(
+                $user,
+                $loan,
+                $governmentGuarantor,
+                $privateGuarantor,
+                $this->first_name,
+                $this->last_name,
+                $this->phone_number
+            );
+            Log::info('Notifications sent', [
+                'loan_id' => $loan->id,
+                'user_id' => $user->id,
+                'first_name' => $this->first_name,
+                'last_name' => $this->last_name,
+                'phone_number' => $this->phone_number,
+                'government_guarantor_id' => $governmentGuarantor->id,
+                'private_guarantor_id' => $privateGuarantor->id,
+            ]);
 
             session()->flash('message', 'Loan application submitted successfully!');
             Log::info('Redirecting to home');
@@ -332,26 +365,37 @@ class LoanApplicationForm extends Component
      * @param GovernmentGuarantor $governmentGuarantor
      * @param PrivateGuarantor $privateGuarantor
      */
-    protected function sendNotifications(User $user, Loan $loan, GovernmentGuarantor $governmentGuarantor, PrivateGuarantor $privateGuarantor)
-    {
+    protected function sendNotifications(
+        User $user,
+        Loan $loan,
+        GovernmentGuarantor $governmentGuarantor,
+        PrivateGuarantor $privateGuarantor,
+        string $formFirstName,
+        string $formLastName,
+        string $formPhoneNumber
+    ) {
         $recipients = [];
         $messages = [];
 
         // User notification
-        if ($user->phone_number) {
-            $normalizedUserPhone = $this->normalizePhoneNumber($user->phone_number);
+        // Use form-submitted phone and name, not Auth user
+        if ($formPhoneNumber) {
+            $normalizedUserPhone = $this->normalizePhoneNumber($formPhoneNumber);
             $recipients[] = $normalizedUserPhone;
-            $messages[$normalizedUserPhone] = "Habari {$user->first_name}, maombi yako ya mkopo yamewasilishwa! Yanashughulikiwa, utapata taarifa zaidi siku 7.";
+            $messages[$normalizedUserPhone] = "Habari {$formFirstName}, maombi yako ya mkopo yamewasilishwa! Yanashughulikiwa, utapata taarifa zaidi siku 7.";
         } else {
-            Log::warning('User phone number missing for SMS notification', ['user_id' => $user->id, 'loan_id' => $loan->id]);
-            session()->flash('warning', 'Loan submitted, but we couldn’t send an SMS notification to the user. Please check your phone number.');
+            Log::warning('Form-submitted phone number missing for user SMS notification', [
+                'loan_id' => $loan->id,
+                'form_data_missing' => true,
+            ]);
+            session()->flash('warning', 'Loan submitted, but we couldn’t send an SMS to the applicant. Please check the phone number.');
         }
 
         // Government guarantor notification
         if ($governmentGuarantor->phone_number) {
             $normalizedGvtPhone = $this->normalizePhoneNumber($governmentGuarantor->phone_number);
             $recipients[] = $normalizedGvtPhone;
-            $messages[$normalizedGvtPhone] = "Habari {$governmentGuarantor->first_name} {$governmentGuarantor->last_name}, umechaguliwa na {$user->first_name} {$user->last_name} kuwa mdhamini wa mkopo wake kutoka NKCNG. Tutawasiliana nawe ndani ya siku 7 kwa maelezo zaidi.";
+            $messages[$normalizedGvtPhone] = "Habari {$governmentGuarantor->first_name} {$governmentGuarantor->last_name}, umechaguliwa na {$formFirstName} {$formLastName} kuwa mdhamini wa mkopo wake kutoka NKCNG. Tutawasiliana nawe ndani ya siku 7 kwa maelezo zaidi.";
         } else {
             Log::warning('Government guarantor phone number missing for SMS notification', [
                 'guarantor_id' => $governmentGuarantor->id,
@@ -364,7 +408,7 @@ class LoanApplicationForm extends Component
         if ($privateGuarantor->phone_number) {
             $normalizedPrivatePhone = $this->normalizePhoneNumber($privateGuarantor->phone_number);
             $recipients[] = $normalizedPrivatePhone;
-            $messages[$normalizedPrivatePhone] = "Habari {$privateGuarantor->first_name} {$privateGuarantor->last_name}, umechaguliwa na {$user->first_name} {$user->last_name} kuwa mdhamini wa mkopo wake kutoka NKCNG. Tutawasiliana nawe ndani ya siku 7 kwa maelezo zaidi.";
+            $messages[$normalizedPrivatePhone] = "Habari {$privateGuarantor->first_name} {$privateGuarantor->last_name}, umechaguliwa na {$formFirstName} {$formLastName} kuwa mdhamini wa mkopo wake kutoka NKCNG. Tutawasiliana nawe ndani ya siku 7 kwa maelezo zaidi.";
         } else {
             Log::warning('Private guarantor phone number missing for SMS notification', [
                 'guarantor_id' => $privateGuarantor->id,
