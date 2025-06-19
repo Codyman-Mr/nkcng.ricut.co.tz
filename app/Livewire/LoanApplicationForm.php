@@ -208,7 +208,8 @@ class LoanApplicationForm extends Component
             $existingLoan = Loan::where('user_id', $user->id)
                 ->where('status', 'approved')
                 ->exists();
-            if ($existingLoan) {
+
+            if ($existingLoan && $user->role !== 'admin') {
                 Log::info('Existing loan found - aborting');
                 $this->hasExistingLoan = true;
                 session()->flash('error', 'You already have an approved loan. Please complete or cancel your existing loan.');
