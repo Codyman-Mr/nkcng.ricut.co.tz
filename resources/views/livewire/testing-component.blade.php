@@ -22,11 +22,11 @@
                     <p class="text-2xl font-bold">{{ number_format($totalLoans) }}</p>
                 </div>
                 <div class="bg-white p-4 rounded shadow">
-                    <h3 class="text-gray-500 text-sm">Total Amount</h3>
+                    <h3 class="text-gray-500 text-sm">Total Amount Loaned</h3>
                     <p class="text-2xl font-bold">TZS {{ number_format($totalAmount) }}</p>
                 </div>
                 <div class="bg-white p-4 rounded shadow">
-                    <h3 class="text-gray-500 text-sm">Total Paid</h3>
+                    <h3 class="text-gray-500 text-sm">Total Amount Paid</h3>
                     <p class="text-2xl font-bold">TZS {{ number_format($totalPaid) }}</p>
                 </div>
                 <div class="bg-white p-4 rounded shadow">
