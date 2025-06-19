@@ -206,6 +206,7 @@
                                                     @php
                                                         $days = round($payment->time_to_next_payment);
                                                     @endphp
+                                                    <a href="/">
                                                     <tr
                                                         class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                         <td class="px-4 py-2">
@@ -216,6 +217,7 @@
                                                             {{ $days }} {{ Str::plural('day', $days) }}
                                                         </td>
                                                     </tr>
+                                                </a>
                                                 @empty
                                                     <tr>
                                                         <td colspan="2"

@@ -220,7 +220,7 @@
                             Users
                         </div>
                     </div>
-                    <div class="relative group">
+                    {{-- <div class="relative group">
                         <a href="/testing"
                             class="flex items-center px-3 py-2 rounded transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-gray-700 {{ isActive('/testing') }}"
                             :class="{ 'justify-center': sidebarCollapsed }">
@@ -231,7 +231,7 @@
                             class="absolute left-full top-0 ml-2 bg-gray-900 text-white text-sm px-2 py-1 rounded shadow-lg hidden !hidden group-hover:block !group-hover:block z-50">
                             Testing
                         </div>
-                    </div>
+                    </div> --}}
                 @endif
             </nav>
 

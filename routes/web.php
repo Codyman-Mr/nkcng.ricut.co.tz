@@ -12,6 +12,7 @@ use App\Http\Controllers\LoanPackageController;
 use PhpParser\Node\Expr\Assign;
 use App\Http\Controllers\GpsDeviceController;
 use App\Http\Controllers\InstallationController;
+use App\Livewire\PaymentHistoryComponent;
 
 Route::get('/', [AuthController::class, 'dashboard'])->middleware('auth');
 
@@ -81,3 +82,7 @@ Route::post('/approve-installation/{installationId}', [InstallationController::c
 
 Route::post('/payment/initiate', [PaymentController::class, 'initiatePayment'])->name('payment.initiate');
 Route::post('/payment/callback', [PaymentController::class, 'handleCallback'])->name('payment.callback');
+
+Route::get('/payment-history/{loan}', [PaymentController::class, 'paymentHistory'])
+    ->name('payment-history')
+    ->middleware('auth');

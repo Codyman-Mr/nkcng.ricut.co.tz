@@ -39,14 +39,6 @@ class TestingComponent extends Component
                 $q->where('loan_type', $this->loanType))
             ->get();
 
-        // Group loans by month for a line chart
-        // $loanTrends = $loans->groupBy(function ($loan) {
-        //     return Carbon::parse($loan->loan_start_date)->format('Y-m');
-        // })->map(fn($group) => $group->count());
-
-        // $timePeriods = $loanTrends->keys()->toArray();
-        // $loanCounts = $loanTrends->values()->toArray();
-
 
         // Filter loans to include only those starting from February 2024 to the present
         $filteredLoans = $loans->filter(function ($loan) {
@@ -127,3 +119,5 @@ class TestingComponent extends Component
         return view('livewire.testing-component', $reportData, );
     }
 }
+
+

@@ -127,12 +127,12 @@ class LoanApplicationForm extends Component
         $existingLoan = Loan::where('user_id', $user->id)
             ->where('status', 'approved')
             ->exists();
-        if ($existingLoan) {
-            Log::info('Existing loan found during mount');
-            $this->hasExistingLoan = true;
-            session()->flash('error', 'You already have an approved loan. Please <a href="/loans" class="underline">view your existing loan</a> or contact support for assistance.');
-            return redirect()->to('/');
-        }
+        // if ($existingLoan) {
+        //     Log::info('Existing loan found during mount');
+        //     $this->hasExistingLoan = true;
+        //     session()->flash('error', 'You already have an approved loan. Please <a href="/loans" class="underline">view your existing loan</a> or contact support for assistance.');
+        //     return redirect()->to('/');
+        // }
     }
 
     private function getStepRules()

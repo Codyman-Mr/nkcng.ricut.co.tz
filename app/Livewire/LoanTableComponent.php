@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Http;
 use App\Jobs\InitiatePaymentJob;
 use App\Jobs\SendSmsJob;
 
+use function Termwind\render;
+
 class LoanTableComponent extends Component
 {
     use WithPagination;
@@ -53,6 +55,8 @@ class LoanTableComponent extends Component
         }
         Log::info('Opened payment modal', ['loan_id' => $loanId]);
     }
+
+  
 
     public function closePaymentModal()
     {

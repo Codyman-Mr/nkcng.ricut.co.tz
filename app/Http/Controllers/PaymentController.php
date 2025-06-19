@@ -8,13 +8,14 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Loan;
 use Carbon\Carbon;
 
-class PaymentController extends Controller {
+class PaymentController extends Controller
+{
     public function initiatePayment(Request $request)
     {
         $request->validate([
             'loan_id' => 'required|exists:loans,id',
             'amount' => 'required|min:1000',
-            'phone_number' => ['required','regex:/^(0|\+255)?[6-7][0-9]{8}$/'],
+            'phone_number' => ['required', 'regex:/^(0|\+255)?[6-7][0-9]{8}$/'],
             'provider' => 'required|in:Mpesa,TigoPesa,AirtelMoney,HaloPesa',
         ]);
 
@@ -101,6 +102,14 @@ class PaymentController extends Controller {
         ;
 
         return view('loan.repayment-alerts', compact('dueSoonLoans'));
+    }
+
+    public function paymentHistory(Loan $loan)
+    {
+        return view(
+            'payments.payment-history',
+            ['loan'=>$loan->load(['payments'])]
+        );
     }
 
 
