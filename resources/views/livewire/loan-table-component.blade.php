@@ -317,13 +317,11 @@
                                                                                             Add Payment
                                                                                         </x-button.outline>
 
-                                                                                            <x-button.outline
-                                                                                                color='blue'
-                                                                                                icon="icons.history"
-                                                                                                onclick="window.location.href='/payment-history/{{ $loan->id }}'"
-                                                                                                >
-                                                                                                Payment History
-                                                                                            </x-button.outline>
+                                                                                        <x-button.outline color='blue'
+                                                                                            icon="icons.history"
+                                                                                            onclick="window.location.href='/payment-history/{{ $loan->id }}'">
+                                                                                            Payment History
+                                                                                        </x-button.outline>
 
 
 
@@ -369,7 +367,7 @@
             </div>
         </div>
 
-        <!-- Payment Modal -->
+        {{-- <!-- Payment Modal -->
         @if ($showPaymentModal)
             <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
                 wire:loading.class="opacity-50 pointer-events-none">
@@ -433,7 +431,107 @@
                     </form>
                 </div>
             </div>
-        @endif
+        @endif --}}
+
+        <!-- Payment Modal -->
+@if ($showPaymentModal)
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
+         wire:loading.class="opacity-50 pointer-events-none">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 class="text-lg font-semibold mb-4 text-gray-800">Add Payment</h2>
+            <form wire:submit.prevent="addPayment">
+                <!-- Payment Method -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Payment Method</label>
+                    <div class="mt-2 space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" wire:model.live="paymentMethod" value="cash" class="form-radio">
+                            <span class="ml-2">Cash</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" wire:model.live="paymentMethod" value="mobile_money" class="form-radio">
+                            <span class="ml-2">Mobile Money</span>
+                        </label>
+                    </div>
+                    @error('paymentMethod')
+                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <!-- Mobile Money Fields (Conditional) -->
+                @if ($paymentMethod === 'mobile_money')
+                    <div class="mb-4">
+                        <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input type="text" wire:model.live="phoneNumber" id="phoneNumber"
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        @error('phoneNumber')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="mb-4">
+                        <label for="provider" class="block text-sm font-medium text-gray-700">Payment Provider</label>
+                        <select wire:model.live="provider" id="provider"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select Provider</option>
+                            <option value="Mpesa">Mpesa</option>
+                            <option value="TigoPesa">TigoPesa</option>
+                            <option value="AirtelMoney">AirtelMoney</option>
+                            <option value="HaloPesa">HaloPesa</option>
+                        </select>
+                        @error('provider')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                        @enderror
+                    </div>
+                @endif
+
+                <!-- Receipt Upload for Cash (Conditional) -->
+                @if ($paymentMethod === 'cash')
+                    <div class="mb-4">
+                        <label for="receipt" class="block text-sm font-medium text-gray-700">Upload Receipt</label>
+                        <input type="file" wire:model="receipt" id="receipt"
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                        @error('receipt')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                        @enderror
+                    </div>
+                @endif
+
+                <!-- Payment Amount -->
+                <div class="mb-4">
+                    <label for="paymentAmount" class="block text-sm font-medium text-gray-700">Payment Amount (TZS)</label>
+                    <input type="number" wire:model.live="paymentAmount" id="paymentAmount"
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                           min="1000" step="1">
+                    @error('paymentAmount')
+                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex space-x-4 items-center">
+                    <button type="submit" wire:loading.attr="disabled"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center space-x-2">
+                        <span>Confirm Payment</span>
+                        <span wire:loading wire:target="addPayment">
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                 fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                        stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </span>
+                    </button>
+                    <button type="button" wire:click="closePaymentModal"
+                            class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endif
 
         <!-- Flash Messages -->
         @if (session()->has('message'))
