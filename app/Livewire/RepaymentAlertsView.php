@@ -64,10 +64,11 @@
 // } -->
 
 
+
 namespace App\Livewire;
 
+use App\Models\SmsLog;
 use App\Models\Loan;
-use App\Models\RepaymentReminderLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
@@ -140,10 +141,9 @@ class RepaymentAlertsView extends Component
 
     public function getReminderLogsProperty()
     {
-        return RepaymentReminderLog::with('loan.user')
-            ->when($this->reminderType, fn($q) => $q->where('type', $this->reminderType))
-            ->whereDate('created_at', $this->filterDate)
-            ->orderByDesc('created_at')
+        return SmsLog::query()
+            ->whereDate('sent_at', $this->filterDate)
+            ->orderByDesc('sent_at')
             ->take(100)
             ->get();
     }
@@ -153,7 +153,7 @@ class RepaymentAlertsView extends Component
         return view('livewire.repayment-alerts-view', [
             'upcomingRepayments' => $this->upcomingRepayments,
             'missedRepayments' => $this->missedRepayments,
-            'reminderLogs' => $this->reminderLogs,
+            'sms_logs' => $this->reminderLogs, 
         ]);
     }
 }

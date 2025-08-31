@@ -80,37 +80,39 @@
                         </div>
 
                         <!-- Card 5 -->
-                        <div class="sm:col-span-1 md:col-start-2 md:row-start-2">
-                            <div class="flex flex-col rounded-md w-full border border-gray-300 shadow-l">
-                                <div class="flex flex-col p-4">
-                                    <span class="flex justify-between items-center pb-1 border-b border-nkgreen">
-                                        <div class="text-sm font-bold text-[#374151] ">Customers with Loans</div>
-                                        <img src="{{ asset('svg/user-not-paid.svg') }}" alt="loan"
-                                            class="w-8 h-8 object-cover ">
-                                    </span>
-                                    <div class="text-xl fw-bold text-[#374151] py-4">
-                                        @php
-                                            $count = 0;
+<div class="sm:col-span-1 md:col-start-2 md:row-start-2">
+    <div class="flex flex-col rounded-md w-full border border-gray-300 shadow-l">
+        <div class="flex flex-col p-4">
+            <span class="flex justify-between items-center pb-1 border-b border-nkgreen">
+                <div class="text-sm font-bold text-[#374151] ">Customers with Loans</div>
+                <img src="{{ asset('svg/user-not-paid.svg') }}" alt="loan"
+                    class="w-8 h-8 object-cover ">
+            </span>
+            <div class="text-xl fw-bold text-[#374151] py-4">
+                @php
+                    $count = 0;
+                    $countedInstallations = [];
 
-                                            // Loop through all users
-                                            foreach ($users as $user) {
-                                                foreach ($user->loans as $loan) {
-                                                    $totalAmount = $loan->loan_required_amount;
-                                                    $paidAmount = $loan->payments->sum('paid_amount');
-                                                    if ($totalAmount > $paidAmount) {
-                                                        $count++; // Increment count if there's a due loan
-                                                        break; // Break to avoid counting the same user multiple times
-                                                    }
-                                                }
-                                            }
-                                        @endphp
-                                        <p>
-                                            {{ $count }} <strong class="text-sm">People</strong>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    foreach ($loans as $loan) {
+                        $totalAmount = $loan->loan_required_amount;
+                        $paidAmount = $loan->payments->sum('paid_amount');
+
+                        if ($totalAmount > $paidAmount) {
+                            if (!in_array($loan->installation_id, $countedInstallations)) {
+                                $count++;
+                                $countedInstallations[] = $loan->installation_id;
+                            }
+                        }
+                    }
+                @endphp
+                <p>
+                    {{ $count }} <strong class="text-sm">People</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
 
                         <!-- Card 6 -->
                         <div class="sm:col-span-1 md:col-start-3 md:row-start-2">
@@ -190,7 +192,8 @@
                                 <div
                                     class="border border-gray-300 rounded-md bg-white shadow-sm dark:bg-gray-800 h-full flex flex-col">
                                     <div class="px-4 py-3 border-b">
-                                        <h5 class="font-bold text-gray-700 dark:text-white">Payments This Week</h5>
+                                        <h5 class="font-bold text-black dark:text-white">Payments This Week</h5>
+
                                     </div>
                                     <div class="overflow-x-auto flex-1">
                                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -210,8 +213,8 @@
                                                     <tr
                                                         class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                         <td class="px-4 py-2">
-                                                            {{ $payment->user->first_name }}
-                                                            {{ $payment->user->last_name }}
+                                                            {{ $payment->applicant_name }}
+                                                            
                                                         </td>
                                                         <td class="px-4 py-2">
                                                             {{ $days }} {{ Str::plural('day', $days) }}
@@ -236,7 +239,8 @@
                                 <div
                                     class="border border-gray-300 rounded-md bg-white shadow-sm dark:bg-gray-800 h-full flex flex-col">
                                     <div class="px-4 py-3 border-b">
-                                        <h5 class="font-bold text-gray-700 dark:text-white">Missed Payments This Week</h5>
+                                        <h5 class="font-bold text-black dark:text-black">Missed Payments </h5>
+
                                     </div>
                                     <div class="overflow-x-auto flex-1">
                                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -261,14 +265,14 @@
                                                         <tr
                                                             class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                             <td class="px-4 py-2">
-                                                                {{ $missed->user->first_name }}
-                                                                {{ $missed->user->last_name }}
+                                                                {{ $missed->applicant_name }}
+                                                                
                                                             </td>
                                                             <td class="px-4 py-2">
-                                                                {{ abs(round($missed->time_to_next_payment)) }} days
+                                                                {{ abs(round($missed->days_past_due )) }} days
                                                             </td>
                                                             <td class="px-4 py-2">
-                                                                {{ $missed->user->phone_number }}
+                                                                {{ $missed->applicant_phone_number }}
                                                             </td>
                                                         </tr>
                                                     @endforeach
@@ -292,9 +296,8 @@
                                     <div
                                         class="border border-gray-300 rounded-md bg-white shadow-sm dark:bg-gray-800 flex-1 flex flex-col">
                                         <div class="px-4 py-3 border-b">
-                                            <h5 class="font-bold text-gray-700 dark:text-white">Customers with Near Loan
-                                                End
-                                                Date</h5>
+                                            <h5 class="font-bold text-black dark:text-white">Loan Nearing End Date</h5>
+
                                         </div>
                                         <div class="overflow-x-auto flex-1">
                                             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -314,8 +317,8 @@
                                                             <td class="px-2 py-3">
                                                                 <span
                                                                     class="bg-primary-100 text-primary-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
-                                                                    {{ $loan->user->first_name }}
-                                                                    {{ $loan->user->last_name }}
+                                                                    {{ $loan->applicant_name }}
+                                                                    
                                                                 </span>
                                                             </td>
                                                             <td class="px-2 py-3">
@@ -342,28 +345,21 @@
 
                                                             <td class="px-6 py-3">
                                                                 @php
+    $now = Carbon::now();
+    $end = Carbon::parse($loan->loan_end_date);
 
-                                                                    $now = Carbon::now();
-                                                                    $end = Carbon::parse($loan->loan_end_date);
+    $diffDays = $now->diffInDays($end, false);
 
-                                                                    $months = intval($now->diffInMonths($end, false));
-                                                                    $days = intval($now->diffInDays($end, false));
-                                                                    $hours = intval($now->diffInHours($end, false));
+    if ($diffDays < 0) {
+        echo 'Expired';
+    } elseif ($diffDays <= 14) {
+        echo intval(round($diffDays)) . ' day' . (intval(round($diffDays)) !== 1 ? 's' : '');
+    } else {
+        // Usionyeshe kitu chochote (blank) kama zaidi ya 14 days
+        echo '';
+    }
+@endphp
 
-                                                                    if ($months > 0) {
-                                                                        echo $months .
-                                                                            ' month' .
-                                                                            ($months !== 1 ? 's' : '');
-                                                                    } elseif ($days > 0) {
-                                                                        echo $days . ' day' . ($days !== 1 ? 's' : '');
-                                                                    } elseif ($hours > 0) {
-                                                                        echo $hours .
-                                                                            ' hour' .
-                                                                            ($hours !== 1 ? 's' : '');
-                                                                    } else {
-                                                                        echo 'Expired';
-                                                                    }
-                                                                @endphp
                                                             </td>
 
                                                         </tr>

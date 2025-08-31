@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Jobs\SendSmsJob;
 use App\Models\User;
 use App\Models\CustomerVehicle;
 use App\Models\Installation;
@@ -16,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Http;
+use GuzzleHttp\Client;  // added for HTTP requests
 
 class LoanApplicationForm extends Component
 {
@@ -140,12 +141,7 @@ class LoanApplicationForm extends Component
         $existingLoan = Loan::where('user_id', $user->id)
             ->where('status', 'approved')
             ->exists();
-        // if ($existingLoan) {
-        //     Log::info('Existing loan found during mount');
-        //     $this->hasExistingLoan = true;
-        //     session()->flash('error', 'You already have an approved loan. Please <a href="/loans" class="underline">view your existing loan</a> or contact support for assistance.');
-        //     return redirect()->to('/');
-        // }
+       
     }
 
     private function getStepRules()
@@ -249,6 +245,7 @@ class LoanApplicationForm extends Component
                 'status' => 'pending',
                 'payment_type' => 'loan',
             ]);
+
             Log::info('Installation created: ' . $installation->id);
 
             Log::info('Creating loan');
@@ -257,17 +254,20 @@ class LoanApplicationForm extends Component
                 'installation_id' => $installation->id,
                 'loan_required_amount' => (float) $loanPackage->amount_to_finance,
                 'status' => 'pending',
+                'applicant_name' => $this->first_name . ' ' . $this->last_name,
+                'applicant_phone_number' => $this->phone_number,
             ]);
+
             Log::info('Loan created: ' . $loan->id);
 
-            // Check for existing guarantor records
+        
             $existingGovernmentGuarantor = GovernmentGuarantor::where('loan_id', $loan->id)->first();
             $existingPrivateGuarantor = PrivateGuarantor::where('loan_id', $loan->id)->first();
             if ($existingGovernmentGuarantor || $existingPrivateGuarantor) {
                 throw new \Exception('Guarantor records already exist for this loan.');
             }
 
-            // Normalize phone numbers
+        
             $gvtPhoneNumber = $this->normalizePhoneNumber($this->gvt_guarantor_phone_number);
             $privatePhoneNumber = $this->normalizePhoneNumber($this->private_guarantor_phone_number);
 
@@ -286,11 +286,6 @@ class LoanApplicationForm extends Component
                     'phone_number' => $gvtPhoneNumber,
                     'nida_no' => $this->gvt_guarantor_nida_no,
                 ]);
-                // Log::info('Government guarantor created: ' . ($governmentGuarantor->id ?? 'failed'), ['guarantor' => $governmentGuarantor->toArray()]);
-
-                // if (!$governmentGuarantor->id) {
-                //     throw new \Exception('Failed to create government guarantor record.');
-                // }
             } catch (QueryException $e) {
                 throw new \Exception('Failed to create government guarantor: ' . $e->getMessage());
             }
@@ -310,11 +305,6 @@ class LoanApplicationForm extends Component
                     'phone_number' => $privatePhoneNumber,
                     'nida_no' => $this->private_guarantor_nida_no,
                 ]);
-                // Log::info('Private guarantor created: ' . ($privateGuarantor->id ?? 'failed'), ['guarantor' => $privateGuarantor->toArray()]);
-
-                // if (!$privateGuarantor->id) {
-                //     throw new \Exception('Failed to create private guarantor record.');
-                // }
             } catch (QueryException $e) {
                 throw new \Exception('Failed to create private guarantor: ' . $e->getMessage());
             }
@@ -322,7 +312,7 @@ class LoanApplicationForm extends Component
             DB::commit();
             Log::info('Database transaction committed');
 
-            // Send SMS notifications
+           
             $this->sendNotifications(
                 $user,
                 $loan,
@@ -356,105 +346,88 @@ class LoanApplicationForm extends Component
             Log::debug('Query log', DB::getQueryLog());
         }
     }
+protected function sendNotifications(
+    User $user,
+    Loan $loan,
+    GovernmentGuarantor $governmentGuarantor,
+    PrivateGuarantor $privateGuarantor,
+    string $formFirstName,
+    string $formLastName,
+    string $formPhoneNumber
+) {
+    $username = 'MIKE001';
+    $apiKey = 'atsk_a37133bcba27a4928705557b9903b016812000533f89a91f06747a289a8654dca1dac55d';
+    $from = 'NK CNG';
+    $enqueue = 1;
 
-    /**
-     * Send SMS notifications to the user and guarantors using SendSmsJob.
-     *
-     * @param User $user
-     * @param Loan $loan
-     * @param GovernmentGuarantor $governmentGuarantor
-     * @param PrivateGuarantor $privateGuarantor
-     */
-    protected function sendNotifications(
-        User $user,
-        Loan $loan,
-        GovernmentGuarantor $governmentGuarantor,
-        PrivateGuarantor $privateGuarantor,
-        string $formFirstName,
-        string $formLastName,
-        string $formPhoneNumber
-    ) {
-        $recipients = [];
-        $messages = [];
-
-        // User notification
-        // Use form-submitted phone and name, not Auth user
-        if ($formPhoneNumber) {
-            $normalizedUserPhone = $this->normalizePhoneNumber($formPhoneNumber);
-            $recipients[] = $normalizedUserPhone;
-            $messages[$normalizedUserPhone] = "Habari {$formFirstName}, maombi yako ya mkopo yamewasilishwa! Yanashughulikiwa, utapata taarifa zaidi siku 7.";
-        } else {
-            Log::warning('Form-submitted phone number missing for user SMS notification', [
-                'loan_id' => $loan->id,
-                'form_data_missing' => true,
-            ]);
-            session()->flash('warning', 'Loan submitted, but we couldn’t send an SMS to the applicant. Please check the phone number.');
+    $normalize = function ($number) {
+        $number = preg_replace('/\D/', '', $number);
+        if (preg_match('/^0(6|7|8)\d{8}$/', $number)) {
+            return '+255' . substr($number, 1);
+        } elseif (preg_match('/^255(6|7|8)\d{8}$/', $number)) {
+            return '+' . $number;
         }
+        return $number;
+    };
 
-        // Government guarantor notification
-        if ($governmentGuarantor->phone_number) {
-            $normalizedGvtPhone = $this->normalizePhoneNumber($governmentGuarantor->phone_number);
-            $recipients[] = $normalizedGvtPhone;
-            $messages[$normalizedGvtPhone] = "Habari {$governmentGuarantor->first_name} {$governmentGuarantor->last_name}, umechaguliwa na {$formFirstName} {$formLastName} kuwa mdhamini wa mkopo wake kutoka NKCNG. Tutawasiliana nawe ndani ya siku 7 kwa maelezo zaidi.";
-        } else {
-            Log::warning('Government guarantor phone number missing for SMS notification', [
-                'guarantor_id' => $governmentGuarantor->id,
-                'loan_id' => $loan->id,
-            ]);
-            session()->flash('warning', 'Loan submitted, but we couldn’t send an SMS to the government guarantor.');
-        }
+    $recipients = [
+        [
+            'to' => $normalize($formPhoneNumber),
+            'message' => "Hellow {$formFirstName},Your loan application has been submitted! It is being processed, and you will receive more information within 7 days.",
+        ],
+        [
+            'to' => $normalize($governmentGuarantor->phone_number),
+            'message' => "Hellow {$governmentGuarantor->first_name} {$governmentGuarantor->last_name},You have been selected by {$formFirstName} {$formLastName} to be a guarantor for their loan from NKCNG. We will contact you within 7 days for further details.",
+        ],
+        [
+            'to' => $normalize($privateGuarantor->phone_number),
+            'message' => "Hellow {$privateGuarantor->first_name} {$privateGuarantor->last_name}, You have been selected by{$formFirstName} {$formLastName} to be a guarantor for their loan from NKCNG. We will contact you within 7 days for further details.",
+        ],
+    ];
 
-        // Private guarantor notification
-        if ($privateGuarantor->phone_number) {
-            $normalizedPrivatePhone = $this->normalizePhoneNumber($privateGuarantor->phone_number);
-            $recipients[] = $normalizedPrivatePhone;
-            $messages[$normalizedPrivatePhone] = "Habari {$privateGuarantor->first_name} {$privateGuarantor->last_name}, umechaguliwa na {$formFirstName} {$formLastName} kuwa mdhamini wa mkopo wake kutoka NKCNG. Tutawasiliana nawe ndani ya siku 7 kwa maelezo zaidi.";
-        } else {
-            Log::warning('Private guarantor phone number missing for SMS notification', [
-                'guarantor_id' => $privateGuarantor->id,
-                'loan_id' => $loan->id,
-            ]);
-            session()->flash('warning', 'Loan submitted, but we couldn’t send an SMS to the private guarantor.');
-        }
+    foreach ($recipients as $recipient) {
+        $phone = $recipient['to'];
+        $message = $recipient['message'];
 
-        // Remove duplicate recipients
-        $recipients = array_unique($recipients);
-
-        if (empty($recipients)) {
-            Log::warning('No valid recipients for SMS notifications', ['loan_id' => $loan->id]);
-            session()->flash('warning', 'Loan submitted, but no SMS notifications were sent due to missing phone numbers.');
-            return;
+        if (!$phone || strlen($phone) < 10) {
+            Log::warning("SMS not sent. Invalid phone number.", ['phone' => $phone]);
+            continue;
         }
 
         try {
-            // Dispatch individual SendSmsJob for each recipient with their specific message
-            $successCount = 0;
-            foreach ($recipients as $recipient) {
-                if (isset($messages[$recipient])) {
-                    SendSmsJob::dispatch([$recipient], $messages[$recipient], $loan->id);
-                    $successCount++;
-                    Log::info('SMS job dispatched for recipient', [
-                        'recipient' => $recipient,
-                        'loan_id' => $loan->id,
-                        'message' => $messages[$recipient],
-                    ]);
-                }
-            }
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'apiKey' => $apiKey,
+            ])->asForm()->post('https://api.africastalking.com/version1/messaging', [
+                'username' => $username,
+                'to' => $phone,
+                'message' => $message,
+                'from' => $from,
+                'enqueue' => $enqueue,
+            ]);
 
-            if ($successCount > 0) {
-                Log::info('SMS jobs dispatched successfully', ['successful' => $successCount, 'total' => count($recipients), 'loan_id' => $loan->id]);
+            if ($response->successful()) {
+                Log::info("SMS sent successfully", [
+                    'to' => $phone,
+                    'message' => $message,
+                    'response' => $response->json(),
+                ]);
             } else {
-                Log::warning('No SMS jobs dispatched due to missing messages', ['loan_id' => $loan->id]);
-                session()->flash('warning', 'Loan submitted, but no SMS notifications were sent.');
+                Log::error("Failed to send SMS", [
+                    'to' => $phone,
+                    'message' => $message,
+                    'response' => $response->body(),
+                ]);
             }
         } catch (\Exception $e) {
-            Log::error('Error dispatching SMS jobs: ' . $e->getMessage(), [
-                'loan_id' => $loan->id,
-                'trace' => $e->getTraceAsString(),
+            Log::error("SMS exception occurred", [
+                'to' => $phone,
+                'error' => $e->getMessage(),
             ]);
-            session()->flash('warning', 'Loan submitted, but we couldn’t queue some SMS notifications.');
         }
     }
+}
 
     public function next()
     {

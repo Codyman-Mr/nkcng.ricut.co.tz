@@ -133,12 +133,12 @@
 
                 @if (auth()->user()->isAdmin())
                     <div class="relative group">
-                        <a href="/loans-pending"
+                        <!-- <a href="/loans-pending"
                             class="flex items-center px-3 py-2 rounded transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-gray-700 {{ isActive('/loans-pending') }}"
                             :class="{ 'justify-center': sidebarCollapsed }">
                             <i class="bi bi-hourglass-split text-lg"></i>
                             <span class="ml-3 text-sm" :class="{ 'hidden': sidebarCollapsed }">Pending Loans</span>
-                        </a>
+                        </a> -->
                         <div x-show="sidebarCollapsed" x-transition.opacity
                             class="absolute left-full top-0 ml-2 bg-gray-900 text-white text-sm px-2 py-1 rounded shadow-lg hidden !hidden group-hover:block !group-hover:block z-50">
                             Pending Loans
@@ -196,12 +196,12 @@
                     </div>
 
                     <div class="relative group">
-                        <a href="/installations"
+                        <!-- <a href="/installations"
                             class="flex items-center px-3 py-2 rounded transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-gray-700 {{ isActive('/installations') }}"
                             :class="{ 'justify-center ': sidebarCollapsed  }">
                             <i class="bi bi-wrench-adjustable-circle-fill"></i>
                             <span class="ml-3 text-sm" :class="{ 'hidden': sidebarCollapsed }">Installations</span>
-                        </a>
+                        </a> -->
                         <div x-show="sidebarCollapsed" x-transition.opacity
                             class="absolute left-full top-0 ml-2 bg-gray-900 text-white text-sm px-2 py-1 rounded shadow-lg hidden !hidden group-hover:block !group-hover:block z-50">
                             Installations
@@ -234,6 +234,11 @@
                     </div> --}}
                 @endif
             </nav>
+  <li class="nav-item">
+    <a class="nav-link" href="{{ route('password.edit') }}">
+        Change Password
+    </a>
+</li>
 
             <!-- Logout -->
             <div class="relative group border-t border-gray-700 p-4">

@@ -91,18 +91,20 @@ class PaymentController extends Controller
         };
     }
 
-    public function repaymentAlerts()
-    {
-        // $unpaid_loans = Loan::unPaidLoans();
-        // return view('loan.repayment-alerts', compact('unpaid_loans'));
+  
 
-        $dueSoonLoans = Loan::with(['user', 'payments'])
-            ->where('status', 'active')
-            ->get()
-        ;
+public function repaymentAlerts()
+{
+    $today = Carbon::today();
+    $next7Days = Carbon::today()->addDays(7);
 
-        return view('loan.repayment-alerts', compact('dueSoonLoans'));
-    }
+    // Chagua loans zenye status 'approved' na loan_end_date ndani ya next 7 days
+    $dueSoonLoans = Loan::where('status', 'approved')
+        ->whereBetween('loan_end_date', [$today, $next7Days])
+        ->get();
+
+    return view('loan.repayment-alerts', compact('dueSoonLoans'));
+}
 
     public function paymentHistory(Loan $loan)
     {

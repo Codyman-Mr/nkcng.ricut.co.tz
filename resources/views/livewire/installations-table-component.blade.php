@@ -84,7 +84,7 @@
                                                                 class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                                                                 <td class="px-4 py-4">{{ $installation->id }}</td>
                                                                 <td class="px-4 py-4">
-                                                                    {{ $installation->customerVehicle->user->first_name . ' ' .$installation->customerVehicle->user->last_name ?? 'N/A' }}
+                                                                    {{ $installation->loan->applicant_name ?? 'N/A' }}
                                                                 </td>
                                                                 <td class="px-4 py-4">
                                                                     @if ($installation->status == 'pending')

@@ -14,7 +14,15 @@ use App\Http\Controllers\GpsDeviceController;
 use App\Http\Controllers\InstallationController;
 use App\Livewire\PaymentHistoryComponent;
 
+Route::post('/loan-submit', [AuthController::class, 'submitLoan'])->name('loan.submit');
+
 Route::get('/', [AuthController::class, 'dashboard'])->middleware('auth');
+use App\Http\Controllers\Admin\PasswordController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/change-password', [PasswordController::class, 'edit'])->name('password.edit');
+    Route::put('/change-password', [PasswordController::class, 'update'])->name('password.update');
+});
 
 Route::post('/send-reminder', [Controller::class, 'sendMessage'])->middleware('auth');
 
@@ -27,6 +35,15 @@ Route::get('/login', [AuthController::class, 'loginPage'])->name('login-page')->
 Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('guest');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('user-logout')->middleware('auth');
+Route::get('/repayments/upcoming', [LoanController::class, 'showUpcomingRepayments']);
+
+use App\Jobs\SendSmsJob;
+
+Route::get('/test-sms', function () {
+    SendSmsJob::dispatch(['+255712345678'], 'Test SMS from queue', 999);
+    return 'Test SMS Job dispatched!';
+});
+
 
 Route::post('/approve-loan/{loan}', [LoanController::class, 'approveLoan'])->name('loan-approve')->middleware('auth');
 Route::post('/store-loan-application/{user}', [LoanController::class, 'store'])->name('store-loan-application')->middleware('auth');

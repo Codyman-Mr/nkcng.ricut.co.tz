@@ -53,10 +53,9 @@
 
                                             <div
                                                 class="overflow-x-scroll scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent hover:scrollbar-thumb-gray-500">
-                                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                                    <thead
-                                                        class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
-                                                        <tr>
+                                               <table class="w-full text-sm text-left text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 rounded-lg shadow-md">
+    <thead class="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white uppercase text-xs font-semibold">
+        <tr>
                                                             <th scope="col" class="px-4 py-3">Name</th>
                                                             <th class="px-3 py-2 cursor-pointer"
                                                                 wire:click="sortBy('loan_required_amount')">
@@ -111,11 +110,9 @@
                                                             <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 accordion-toggle cursor-pointer"
                                                                 data-target="#collapse-{{ $loan->id }}">
                                                                 <td class="px-2 py-3">
-                                                                    <span
-                                                                        class="items-center px-1 bg-primary-50 text-primary-800 text-sm font-medium py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
-                                                                        {{ $loan->user->first_name }}
-                                                                        {{ $loan->user->last_name }}
-                                                                    </span>
+                                                                    <span class="items-center px-1 bg-primary-50 text-primary-800 text-sm font-medium py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
+    {{ $loan->applicant_name }}
+</span>
                                                                 </td>
                                                                 <td class="px-2 py-3 text-sm">
                                                                     {{ number_format($loan->loan_required_amount) }} Tsh
@@ -306,11 +303,7 @@
                                                                                         </span>
                                                                                     </div>
                                                                                     <div class="flex gap-2">
-                                                                                        <x-button.outline color="gray"
-                                                                                            icon="icons.bell"
-                                                                                            onclick="confirmSendReminder({{ $loan->id }}, '{{ $loan->user->first_name }}')">
-                                                                                            Send Reminder
-                                                                                        </x-button.outline>
+                                                                                        
                                                                                         <x-button.outline color="green"
                                                                                             icon="icons.plus"
                                                                                             wire:click="openPaymentModal({{ $loan->id }})">
@@ -366,73 +359,6 @@
                 </div>
             </div>
         </div>
-
-        {{-- <!-- Payment Modal -->
-        @if ($showPaymentModal)
-            <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
-                wire:loading.class="opacity-50 pointer-events-none">
-                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-                    <h2 class="text-lg font-semibold mb-4 text-gray-800">Add Payment</h2>
-                    <form wire:submit.prevent="addPayment">
-                        <div class="mb-4">
-                            <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Phone
-                                Number</label>
-                            <input type="text" wire:model.live="phoneNumber" id="phoneNumber"
-                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            @error('phoneNumber')
-                                <span class="text-red-500 text-sm">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="mb-4">
-                            <label for="provider" class="block text-sm font-medium text-gray-700">Payment
-                                Provider</label>
-                            <select wire:model.live="provider" id="provider"
-                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                <option value="">Select Provider</option>
-                                <option value="Mpesa">Mpesa</option>
-                                <option value="TigoPesa">TigoPesa</option>
-                                <option value="AirtelMoney">AirtelMoney</option>
-                                <option value="HaloPesa">HaloPesa</option>
-                            </select>
-                            @error('provider')
-                                <span class="text-red-500 text-sm">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="mb-4">
-                            <label for="paymentAmount" class="block text-sm font-medium text-gray-700">Payment Amount
-                                (TZS)</label>
-                            <input type="number" wire:model.live="paymentAmount" id="paymentAmount"
-                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                min="1000" step="1">
-                            @error('paymentAmount')
-                                <span class="text-red-500 text-sm">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="flex space-x-4 items-center">
-                            <button type="submit" wire:loading.attr="disabled"
-                                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center space-x-2">
-                                <span>Confirm Payment</span>
-                                <span wire:loading wire:target="addPayment">
-                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
-                                        fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10"
-                                            stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                        </path>
-                                    </svg>
-                                </span>
-                            </button>
-                            <button type="button" wire:click="closePaymentModal"
-                                class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        @endif --}}
-
         <!-- Payment Modal -->
 @if ($showPaymentModal)
     <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
@@ -452,11 +378,12 @@
                             <input type="radio" wire:model.live="paymentMethod" value="mobile_money" class="form-radio">
                             <span class="ml-2">Mobile Money</span>
                         </label>
-                    </div>
-                    @error('paymentMethod')
-                        <span class="text-red-500 text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
+                        <label class="inline-flex items-center">
+            <input type="radio" wire:model.live="paymentMethod" value="bank" class="form-radio">
+            <span class="ml-2">Bank</span>
+        </label>
+
+       
 
                 <!-- Mobile Money Fields (Conditional) -->
                 @if ($paymentMethod === 'mobile_money')
@@ -483,6 +410,35 @@
                         @enderror
                     </div>
                 @endif
+
+                <!-- Bank Fields (Conditional) -->
+@if ($paymentMethod === 'bank')
+    <div class="mb-4">
+        <label for="bank_name" class="block text-sm font-medium text-gray-700">Select Bank</label>
+        <select wire:model.live="bankName" id="bank_name"
+                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Choose Bank</option>
+            <option value="NMB">NMB Bank</option>
+            <option value="CRDB">CRDB Bank</option>
+            <option value="NBC">NBC Bank</option>
+            <option value="Stanbic">Stanbic Bank</option>
+            <option value="Equity">Equity Bank</option>
+        </select>
+        @error('bankName')
+            <span class="text-red-500 text-sm">{{ $message }}</span>
+        @enderror
+    </div>
+
+    <div class="mb-4">
+        <label for="account_number" class="block text-sm font-medium text-gray-700">Account Number</label>
+        <input type="text" wire:model.live="accountNumber" id="account_number"
+               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+        @error('accountNumber')
+            <span class="text-red-500 text-sm">{{ $message }}</span>
+        @enderror
+    </div>
+@endif
+
 
                 <!-- Receipt Upload for Cash (Conditional) -->
                 @if ($paymentMethod === 'cash')

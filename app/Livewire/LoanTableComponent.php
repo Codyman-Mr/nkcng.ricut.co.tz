@@ -29,6 +29,7 @@ class LoanTableComponent extends Component
     public $sortDirection = 'asc';
     public $selectedLoanId;
     public $phoneNumber;
+    public $bankName;
     public $provider;
     public $paymentAmount;
     public $paymentMethod = 'cash';
@@ -41,12 +42,14 @@ class LoanTableComponent extends Component
 
     public function rules()
     {
-        return [
-            'paymentAmount' => 'required|numeric|min:1000',
-            'phoneNumber' => [ 'string', 'regex:/^(\+255|0)[0-9]{9}$/'],
-            'provider' => 'in:Mpesa,TigoPesa,AirtelMoney,HaloPesa',
-            'paymentMethod' => 'required|in:cash,mpesa,tigopesa,airtelmoney,halopesa',
-            'receipt' => 'required_if:paymentMethod,cash|file|mimes:pdf,png,jpg,jpeg|max:10240',
+       return [
+    'paymentAmount' => 'required|numeric|min:1000',
+    'paymentMethod' => 'required|in:cash,mobile_money,bank',
+    'phoneNumber' => ['required_if:paymentMethod,mobile_money', 'string', 'regex:/^(\+255|0)[0-9]{9}$/'],
+    'provider' => 'required_if:paymentMethod,mobile_money|in:Mpesa,TigoPesa,AirtelMoney,HaloPesa',
+    'bankName' => 'required_if:paymentMethod,bank',
+    'receipt' => 'nullable|file|mimes:pdf,png,jpg,jpeg|max:10240',
+
         ];
     }
 
@@ -74,77 +77,65 @@ class LoanTableComponent extends Component
         Log::info('Closed payment modal');
     }
 
-    public function addPayment()
-    {
-        $this->validate();
-        $this->isLoading = true;
-        $this->dispatch('payment-processing'); // Debugging event
+public function addPayment() 
+{
+    $this->validate();
+    $this->isLoading = true;
+    $this->dispatch('payment-processing'); // Debugging event
 
-        Log::info('Adding payment', [
-            'loan_id' => $this->selectedLoanId,
-            'amount' => $this->paymentAmount,
-            'phone_number' => $this->phoneNumber,
-            'provider' => $this->provider,
-        ]);
+    Log::info('Adding payment', [
+        'loan_id' => $this->selectedLoanId,
+        'amount' => $this->paymentAmount,
+        'phone_number' => $this->phoneNumber,
+        'provider' => $this->provider,
+    ]);
 
-        // try {
-        //     $loan = Loan::findOrFail($this->selectedLoanId);
-        //     if ($loan->status !== 'approved') {
-        //         throw new \Exception('Payments can only be added for approved loans.');
-        //     }
+    try {
+        $loan = Loan::findOrFail($this->selectedLoanId);
+        if ($loan->status !== 'approved') {
+            throw new \Exception('Payments can only be added for approved loans.');
+        }
 
-        //     $normalizedPhoneNumber = $this->normalizePhoneNumber($this->phoneNumber);
-        //     InitiatePaymentJob::dispatch($loan->id, $this->paymentAmount, $normalizedPhoneNumber, $this->provider);
+        if ($this->paymentMethod === 'mobile_money') {
+            $normalizedPhoneNumber = $this->normalizePhoneNumber($this->phoneNumber);
+            InitiatePaymentJob::dispatch($loan->id, $this->paymentAmount, $normalizedPhoneNumber, $this->provider);
 
-        //     $recipients = [$normalizedPhoneNumber];
-        //     $message = "Payment of TZS {$this->paymentAmount} for Loan #{$loan->id} has been initiated.";
-        //     SendSmsJob::dispatch($recipients, $message, $loan->id);
-        //     Log::info('SMS job dispatched', ['loan_id' => $loan->id, 'recipients' => $recipients]);
+           $transactionId = 'MM_' . $loan->id . '_' . Str::uuid();
 
-        //     session()->flash('message', 'Payment initiated successfully. You will be notified once processed.');
-        //     $this->dispatch('notify', [
-        //         'type' => 'success',
-        //         'message' => 'Payment initiated successfully. You will be notified once processed.'
-        //     ]);
-        //     $this->closePaymentModal();
-        // } catch (\Exception $e) {
-        //     Log::error('Failed to add payment: ' . $e->getMessage(), [
-        //         'loan_id' => $this->selectedLoanId,
-        //         'trace' => $e->getTraceAsString(),
-        //     ]);
-        //     session()->flash('error', 'Failed to initiate payment: ' . $e->getMessage());
-        //     $this->dispatch('notify', [
-        //         'type' => 'error',
-        //         'message' => 'Failed to initiate payment: ' . $e->getMessage()
-        //     ]);
-        // } finally {
-        //     $this->isLoading = false;
-        //     $this->dispatch('payment-processed'); // Debugging event
-        // }
+Payment::create([
+    'loan_id' => $loan->id,
+    'user_id' => $loan->user->id,
+    'paid_amount' => $this->paymentAmount,
+    'payment_date' => now()->format('Y-m-d'),
+    'transaction_id' => $transactionId,
+    'external_id' => $transactionId, // tumia transactionId kama temporary external_id
+    'status' => 'pending',
+    'job_status' => 'processing',
+    'payment_method' => 'mobile_money',
+    'provider' => $this->provider,
+    'receipt_path' => null,
+    'created_at' => now(),
+    'updated_at' => now(),
+]);
 
-        try {
-            $loan = Loan::findOrFail($this->selectedLoanId);
-            if ($loan->status !== 'approved') {
-                throw new \Exception('Payments can only be added for approved loans.');
-            }
 
-            if ($this->paymentMethod === 'mobile_money') {
-                $normalizedPhoneNumber = $this->normalizePhoneNumber($this->phoneNumber);
-                InitiatePaymentJob::dispatch($loan->id, $this->paymentAmount, $normalizedPhoneNumber, $this->provider);
-                $recipients = [$normalizedPhoneNumber];
-                $message = "Payment of TZS {$this->paymentAmount} for Loan #{$loan->id} has been initiated.";
-                SendSmsJob::dispatch($recipients, $message, $loan->id);
-                Log::info('Mobile money payment dispatched', [
-                    'loan_id' => $loan->id,
-                    'amount' => $this->paymentAmount,
-                    'phone_number' => $normalizedPhoneNumber,
-                    'provider' => $this->provider,
-                ]);
-            } elseif ($this->paymentMethod === 'cash') {
-                // Upload receipt
-                $userName = str_replace(' ', '_', strtolower($loan->user->name ?? 'user_' . $loan->id));
-                $timestamp = now()->format('YmdHis');
-                Storage::disk('public')->makeDirectory('cash-receipts');
+            $recipients = [$normalizedPhoneNumber];
+            $message = "Payment of TZS {$this->paymentAmount} for Loan #{$loan->id} has been initiated.";
+            SendSmsJob::dispatch($recipients, $message, $loan->id);
+
+            Log::info('Mobile money payment dispatched', [
+                'loan_id' => $loan->id,
+                'amount' => $this->paymentAmount,
+                'phone_number' => $normalizedPhoneNumber,
+                'provider' => $this->provider,
+            ]);
+        } elseif ($this->paymentMethod === 'cash') {
+            $userName = str_replace(' ', '_', strtolower($loan->user->name ?? 'user_' . $loan->id));
+            $timestamp = now()->format('YmdHis');
+            Storage::disk('public')->makeDirectory('cash-receipts');
+
+            $path = null;
+            if ($this->receipt) {
                 $extension = $this->receipt->getClientOriginalExtension();
                 $fileName = "{$userName}_receipt_{$timestamp}.{$extension}";
                 $path = $this->receipt->storeAs('cash-receipts', $fileName, 'public');
@@ -153,58 +144,98 @@ class LoanTableComponent extends Component
                 if (!$fileExists) {
                     throw new \Exception("Failed to store receipt: {$fileName}");
                 }
-
-                // Create payment record
-                $transactionId = 'CASH_' . $loan->id . '_' . Str::uuid();
-                Payment::create([
-                    'loan_id' => $loan->id,
-                    'user_id' => $loan->user->id,
-                    'paid_amount' => $this->paymentAmount,
-                    'payment_date' => now()->format('Y-m-d'),
-                    'transaction_id' => $transactionId,
-                    'external_id' => $transactionId,
-                    'status' => 'pending',
-                    'job_status' => 'completed',
-                    'payment_method' => 'cash',
-                    'provider' => 'Cash',
-                    'receipt_path' => $path,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                $recipients = [$this->normalizePhoneNumber($loan->user->phone_number)];
-                $message = "Cash payment of TZS {$this->paymentAmount} for Loan #{$loan->id} recorded, pending verification.";
-                SendSmsJob::dispatch($recipients, $message, $loan->id);
-                Log::info('Cash payment recorded', [
-                    'loan_id' => $loan->id,
-                    'transaction_id' => $transactionId,
-                    'receipt_path' => $path,
-                ]);
             }
 
-            session()->flash('message', $this->paymentMethod === 'cash'
-                ? 'Cash payment recorded successfully, pending verification.'
-                : 'Payment initiated successfully. You will be notified once processed.');
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => session()->get('message'),
+            $transactionId = 'CASH_' . $loan->id . '_' . Str::uuid();
+            Payment::create([
+                'loan_id' => $loan->id,
+                'user_id' => $loan->user->id,
+                'paid_amount' => $this->paymentAmount,
+                'payment_date' => now()->format('Y-m-d'),
+                'transaction_id' => $transactionId,
+                'external_id' => $transactionId,
+                'status' => 'pending',
+                'job_status' => 'completed',
+                'payment_method' => 'cash',
+                'provider' => 'Cash', // hardcoded cash
+                'receipt_path' => $path,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
-            $this->closePaymentModal();
-        } catch (\Exception $e) {
-            Log::error('Failed to add payment: ' . $e->getMessage(), [
-                'loan_id' => $this->selectedLoanId,
-                'trace' => $e->getTraceAsString(),
+
+            $recipients = [$this->normalizePhoneNumber($loan->user->phone_number)];
+            $message = "Cash payment of TZS {$this->paymentAmount} for Loan #{$loan->id} recorded, pending verification.";
+            SendSmsJob::dispatch($recipients, $message, $loan->id);
+
+            Log::info('Cash payment recorded', [
+                'loan_id' => $loan->id,
+                'transaction_id' => $transactionId,
+                'receipt_path' => $path,
             ]);
-            session()->flash('error', 'Failed to add payment: ' . $e->getMessage());
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Failed to add payment: ' . $e->getMessage(),
+        } elseif ($this->paymentMethod === 'bank') {
+            $transactionId = 'BANK_' . $loan->id . '_' . Str::uuid();
+
+            // Hii ni sehemu muhimu: hakikisha provider ni provider halisi (benki) sio 'Mpesa' default
+            $bankProvider = $this->provider;
+
+            Payment::create([
+                'loan_id' => $loan->id,
+                'user_id' => $loan->user->id,
+                'paid_amount' => $this->paymentAmount,
+                'payment_date' => now()->format('Y-m-d'),
+                'transaction_id' => $transactionId,
+                'external_id' => $transactionId,
+                'status' => 'pending',
+                'job_status' => 'completed',
+                'payment_method' => 'bank',
+                'provider' => $bankProvider, // Hapa sasa provider ni benki halisi
+                'receipt_path' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
-        } finally {
-            $this->isLoading = false;
-            $this->dispatch('payment-processed');
+
+            $recipients = [$this->normalizePhoneNumber($loan->user->phone_number)];
+            $message = "Bank payment of TZS {$this->paymentAmount} for Loan #{$loan->id} recorded, pending verification.";
+            SendSmsJob::dispatch($recipients, $message, $loan->id);
+
+            Log::info('Bank payment recorded', [
+                'loan_id' => $loan->id,
+                'transaction_id' => $transactionId,
+                'provider' => $bankProvider,
+            ]);
         }
+
+        // New addition: Send email notification after payment recorded/initiated
+        if (isset($loan->user->email)) {
+            \Mail::to($loan->user->email)->send(new \App\Mail\PaymentNotificationMail($loan, $this->paymentAmount, $this->paymentMethod));
+            Log::info('Payment notification email sent to user', ['email' => $loan->user->email]);
+        }
+
+        session()->flash('message', $this->paymentMethod === 'cash'
+            ? 'Cash payment recorded successfully.'
+            : 'Payment initiated successfully. You will be notified once processed.');
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => session()->get('message'),
+        ]);
+        $this->closePaymentModal();
+    } catch (\Exception $e) {
+        Log::error('Failed to add payment: ' . $e->getMessage(), [
+            'loan_id' => $this->selectedLoanId,
+            'trace' => $e->getTraceAsString(),
+        ]);
+        session()->flash('error', 'Failed to add payment: ' . $e->getMessage());
+        $this->dispatch('notify', [
+            'type' => 'error',
+            'message' => 'Failed to add payment: ' . $e->getMessage(),
+        ]);
+    } finally {
+        $this->isLoading = false;
+        $this->dispatch('payment-processed');
     }
+}
+
+
 
     protected function normalizePhoneNumber(string $phoneNumber): string
     {
@@ -254,14 +285,15 @@ class LoanTableComponent extends Component
             ->with('user')
             ->get();
 
-        $loans = Loan::with(['user', 'payments'])
-            ->when($this->search, function ($query) {
-                $query->whereHas('user', function ($q) {
-                    $q->where('first_name', 'like', "%{$this->search}%")
-                        ->orWhere('last_name', 'like', "%{$this->search}%");
-                });
-            })
-            ->get()
+  $loans = Loan::with(['user', 'payments'])
+    ->where('status', 'approved') // Tumia status kutoka kwenye loan table
+    ->when($this->search, function ($query) {
+        $query->where('applicant_name', 'like', "%{$this->search}%");
+    })
+    ->get()
+
+
+
             ->map(function ($loan) {
                 $paid = $loan->payments->sum('paid_amount');
                 $remaining = $loan->loan_required_amount - $paid;

@@ -1,98 +1,220 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Loan;
 use App\Models\User;
 use App\Models\Payment;
+use App\Models\Location;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use AfricasTalking\SDK\AfricasTalking;
-use App\Models\Location;
+
+
+$missedPayments = Loan::where('status', 'approved')
+    ->get()
+    ->filter(function ($loan) {
+        return $loan->next_payment_date < Carbon::today(); // loan imelalila
+    });
+
+    
 
 class AuthController extends Controller
 {
 
     public $loan;
 
-    public function mount()
-    {
-        // Fetch the loan for the logged-in user
-        $this->loan = Loan::where('user_id', Auth::id())->first();
+   public function mount()
+{
+   
+
+    $installationId = Session::get('installation_id');
+
+    if ($installationId) {
+        $this->loan = Loan::where('installation_id', $installationId)->first();
+    } else {
+        $this->loan = null;
     }
+}
 
     public function dashboard()
-    {
-        // Get all payments with their associated loans
-        $payments = Payment::with('loan')->get();
+{
+    $totalLoanAmount = Loan::sum('loan_required_amount');
 
-        // Get the current logged-in user and load their loans
-        $user = User::with('loans')->find(Auth::id());
+    $allUsersCount = User::count();
 
-        // Calculate total loan amount for all users
-        $totalLoanAmount = Loan::sum('loan_required_amount');
+    $customersWithLoansCount = DB::table('loans')
+        ->where('status', 'approved')
+        ->whereNotNull('applicant_name')
+        ->distinct()
+        ->count('applicant_name');
 
-        // Fetch all users with their loans and payments
-        $users = User::with('loans.payments')->get();
+    $fullyPaidCustomersCount = DB::table('loans')
+        ->join('payments', 'loans.id', '=', 'payments.loan_id')
+        ->select('loans.installation_id', DB::raw('SUM(loans.loan_required_amount) as total_loan'), DB::raw('SUM(payments.paid_amount) as total_paid'))
+        ->groupBy('loans.installation_id')
+        ->havingRaw('SUM(payments.paid_amount) >= SUM(loans.loan_required_amount)')
+        ->count();
 
-        $loan = $this->loan;
+    $payments = Payment::with('loan')->get();
 
+    // Tunatumia $loans (plural) badala ya $loan (singular)
+    $loans = Loan::with('payments')->get();
 
-        $nearEndLoans = Loan::with('user')
-            ->whereNotNull('loan_end_date')
-            ->whereDate('loan_end_date', '>', now())
-            ->where(function ($query) {
-                $query->whereRaw('(
-            SELECT COALESCE(SUM(paid_amount), 0)
-            FROM payments
-            WHERE payments.loan_id = loans.id
-        ) < loans.loan_required_amount');
-            })
-            ->orderBy('loan_end_date', 'asc')
-            ->paginate(10);
+    $user = User::find(Auth::id());
+    $users = User::all();
 
+    $today = Carbon::now('Africa/Dar_es_Salaam')->startOfDay();
+    $cutoffDate = $today->copy()->addDays(14);
 
+    $nearEndLoans = Loan::query()
+        ->whereNotNull('loan_end_date')
+        ->whereBetween('loan_end_date', [$today, $cutoffDate])
+        ->whereRaw('(SELECT COALESCE(SUM(paid_amount),0) FROM payments WHERE payments.loan_id = loans.id) < loans.loan_required_amount')
+        ->orderBy('loan_end_date', 'asc')
+        ->paginate(10);
 
+    $paymentsThisWeek = Loan::query()->get()->filter(function ($loan) {
+        $days = $loan->time_to_next_payment;
+        return is_numeric($days) && $days >= 0 && $days <= 7;
+    });
 
+    $missedPayments = Loan::where('status', 'approved')
+    ->get()
+    ->filter(function ($loan) {
+        return $loan->days_past_due !== null && $loan->days_past_due > 0 && $loan->days_past_due <= 7;
+    });
 
-        // Payments due within 7 days (based on time_to_next_payment attribute)
-        $paymentsThisWeek = Loan::with('user')
-            ->get()
-            ->filter(function ($loan) {
-                $days = $loan->time_to_next_payment;
-                return is_numeric($days) && $days >= 0 && $days <= 7;
-            });
+    $locations = Location::with([
+        'gpsDevice.customerVehicle'
+    ])->get();
 
-        // Missed payments (time_to_next_payment is negative)
-        $missedPayments = Loan::with('user')
-            ->get()
-            ->filter(function ($loan) {
-                $days = $loan->time_to_next_payment;
-                return is_numeric($days) && $days < 0;
-            });
+    return view('dashboard.index', compact(
+        'payments',
+        'user',
+        'totalLoanAmount',
+        'users',
+        'nearEndLoans',
+        'paymentsThisWeek',
+        'missedPayments',
+        'locations',
+        'allUsersCount',
+        'customersWithLoansCount',
+        'fullyPaidCustomersCount',
+        'loans' 
+    ));
+}
 
-        $locations = Location::with([
-            'gpsDevice.user.loans',
-            'gpsDevice.customerVehicle'
-        ])->get();
+public function submitLoan(Request $request)
+{
+    $validated = $request->validate([
+        'loan_package' => 'required|string',
+        'cylinder_capacity' => 'required|string',
+        'loan_required_amount' => 'required|numeric',
+        'nida_number' => 'required|string|max:255',
+        'loan_payment_plan' => 'required|string',
+        'loan_start_date' => 'required|date',
+        'loan_end_date' => 'required|date|after_or_equal:loan_start_date',
+        'applicant_name' => 'required|string|max:255',
+        'applicant_phone_number' => 'required|string|max:20',
+        'initial_payment' => 'required|numeric|min:0',
+    ]);
 
+    // Hifadhi loan
+    $loan = Loan::create([
+        'user_id' => auth()->id() ?? 1,
+        'installation_id' => null,
+        'loan_package' => $validated['loan_package'],
+        'cylinder_capacity' => $validated['cylinder_capacity'],
+        'loan_required_amount' => $validated['loan_required_amount'],
+        'loan_payment_plan' => $validated['loan_payment_plan'],
+        'loan_start_date' => $validated['loan_start_date'],
+        'loan_end_date' => $validated['loan_end_date'],
+        'status' => 'approved',
+        'nida_number' => $validated['nida_number'],
+        'rejection_reason' => null,
+        'applicant_name' => $validated['applicant_name'],
+        'applicant_phone_number' => $validated['applicant_phone_number'],
+        'reminders_sent' => 'not set',
+        'remainder_log' => null,
+    ]);
 
-        return view('dashboard.index', compact(
-            'payments',
-            'user',
-            'totalLoanAmount',
-            'users',
-            'loan',
-            'nearEndLoans',
-            'paymentsThisWeek',
-            'missedPayments',
-            'locations'
-        ));
+    // Hifadhi initial payment ukiongeza user_id
+    Payment::create([
+        'loan_id' => $loan->id,
+        'user_id' => auth()->id() ?? 1,
+        'paid_amount' => $validated['initial_payment'],
+        'payment_date' => now(),
+        'transaction_id' => 'CASH_' . $loan->id . '_' . \Illuminate\Support\Str::uuid(),
+        'external_id' => 'CASH_' . $loan->id . '_' . \Illuminate\Support\Str::uuid(),
+        'status' => 'pending',
+        'job_status' => 'queued',
+        'payment_method' => 'cash',
+        'provider' => 'Cash',
+        'receipt_path' => null,
+    ]);
+
+    // --- SMS SENDING LOGIC ---
+    $phoneNumber = $loan->applicant_phone_number;
+    $fullName = $loan->applicant_name;
+
+    // Format number to +255 if it starts with 0 and is 10 digits
+    if (preg_match('/^0\d{9}$/', $phoneNumber)) {
+        $phoneNumber = '+255' . substr($phoneNumber, 1);
     }
+
+    $username = 'MIKE001';
+    $apiKey = 'atsk_a37133bcba27a4928705557b9903b016812000533f89a91f06747a289a8654dca1dac55d';
+    $enqueue = 1;
+
+   $message = "Congratulations $fullName! Your loan for '{$loan->loan_package}' amounting to TZS " . number_format($loan->loan_required_amount, 2) . " has been approved. You may start using it now. if there is any case contact us 0655414857 Thank you.";
+
+    try {
+        $response = \Illuminate\Support\Facades\Http::withHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/x-www-form-urlencoded',
+            'apiKey' => $apiKey,
+        ])->asForm()->post('https://api.africastalking.com/version1/messaging', [
+            'username' => $username,
+            'to' => $phoneNumber,
+            'from' => 'NK CNG',
+            'message' => $message,
+            'enqueue' => $enqueue,
+        ]);
+
+        if ($response->successful()) {
+            Log::info('SMS sent successfully to customer', [
+                'phone' => $phoneNumber,
+                'message' => $message,
+            ]);
+        } else {
+            Log::error('Failed to send SMS', [
+                'response' => $response->body(),
+                'phone' => $phoneNumber,
+            ]);
+        }
+    } catch (\Exception $e) {
+        Log::error('SMS sending exception', [
+            'error' => $e->getMessage(),
+            'phone' => $phoneNumber,
+        ]);
+    }
+    // --- END SMS SENDING LOGIC ---
+
+    return redirect()->back()->with('success', 'Loan application submitted successfully! SMS sent to customer.');
+}
+
+
+    public function showLoanForm()
+{
+    return view('loan.application'); // Au jina la blade yako ya form
+}
 
 
 
@@ -101,7 +223,7 @@ class AuthController extends Controller
         return view('auth.registration');
     }
 
-    // original registration function
+   
     public function registration(Request $request)
     {
         $request->validate([
@@ -135,12 +257,12 @@ class AuthController extends Controller
             'Content-Type' => 'application/x-www-form-urlencoded',
             'apiKey' => $apiKey,
         ])->asForm()->post('https://api.africastalking.com/version1/messaging', [
-                    'username' => $username,
-                    'to' => $phoneNumber,
-                    'from' => 'NK CNG',
-                    'message' => "Your verification code is {$verification_code}",
-                    'enqueue' => $enqueue,
-                ]);
+            'username' => $username,
+            'to' => $phoneNumber,
+            'from' => 'NK CNG',
+            'message' => "Your verification code is {$verification_code}",
+            'enqueue' => $enqueue,
+        ]);
 
         if ($response->successful()) {
             $user = User::create([
@@ -157,10 +279,6 @@ class AuthController extends Controller
             return back()->withErrors(['other_errors' => 'Failed to send Verification Code']);
         }
     }
-
-
-
-
 
     public function verificationPage(Request $request)
     {
@@ -243,7 +361,3 @@ class AuthController extends Controller
         return redirect()->back();
     }
 }
-
-
-
-// // namespace App\Http\Controllers;

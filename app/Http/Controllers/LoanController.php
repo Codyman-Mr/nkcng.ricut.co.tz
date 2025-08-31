@@ -80,11 +80,15 @@ class LoanController extends Controller
                 return response()->json(['message' => 'User already has an approved loan.'], 400);
             }
 
-            $loan = Loan::create([
-                'user_id' => $user->id,
-                'installation_id' => $installation->id,
-                'loan_required_amount' => str_replace(',', '', $request->loan_required_amount),
-            ]);
+  
+$loan = Loan::create([
+    'user_id' => $user->id,
+    'installation_id' => $installation->id,
+    'loan_required_amount' => str_replace(',', '', $request->loan_required_amount),
+    'applicant_name' => $request->first_name . ' ' . $request->last_name,
+    
+]);
+
 
             // \Log::info('New loan created', [
             //     'loan_id' => $loan->id,
@@ -197,9 +201,12 @@ class LoanController extends Controller
             ->with('user') // Include the user associated with the loan
             ->get();
 
-        $loans = Loan::where('status', 'approved')
-        ->with(['installation.customerVehicle'])
-        ->paginate(10)->onEachSide(2);
+        $loans = Loan::whereHas('installation', function ($query) {
+    $query->where('status', 'complete');
+})
+->with(['installation.customerVehicle'])
+->paginate(10)
+->onEachSide(2);
 
         // Get the search query from the request
         $query = $request->input('query');

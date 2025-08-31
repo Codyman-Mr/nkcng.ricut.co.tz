@@ -23,43 +23,132 @@ class Loan extends Model
         'user_id',
         'installation_id',
         'loan_type',
+         'nida_number',
         'loan_required_amount',
         'loan_payment_plan',
         'loan_start_date',
+        'loan_package',
+        'cylinder_capacity',
         'loan_end_date',
         'status',
+        'applicant_name', 
+        'applicant_phone_number',
         'rejection_reason'
     ];
 
-    public function getTimeToNextPaymentAttribute()
-    {
-        // Only calculate for approved loans
-        if ($this->status !== 'approved') {
-            return null;
-        }
 
-        // Check if loan is fully paid
-        $totalPaid = $this->payments->sum('paid_amount');
-        if ($totalPaid >= $this->loan_required_amount) {
-            return null;
-        }
-
-        // Check if loan period has ended
-        $today = Carbon::now();
-        $endDate = Carbon::parse($this->loan_end_date);
-        if ($today->gt($endDate)) {
-            return null;
-        }
-
-        // Calculate next payment date
-        $nextPaymentDate = $this->calculateNextPaymentDate();
-
-        return $nextPaymentDate
-            ? $today->diffInDays($nextPaymentDate, false) // Returns negative if overdue
-            : null;
+    
+public function getTimeToNextPaymentAttribute() 
+{
+    if (!$this->loan_start_date || !$this->loan_payment_plan || $this->status !== 'approved') {
+        return null;
     }
 
-    public function getDueDateAttribute()
+    $timezone = 'Africa/Dar_es_Salaam';
+    $startDate = Carbon::parse($this->loan_start_date, $timezone)->startOfDay();
+    $today = Carbon::now($timezone)->startOfDay();
+    $nextPaymentDate = $startDate->copy();
+
+    switch (strtolower($this->loan_payment_plan)) {
+        case 'weekly':
+            while ($nextPaymentDate->lessThan($today)) {   // < instead of <=
+                $nextPaymentDate->addDays(7);
+            }
+            break;
+
+        case 'bi-weekly':
+            while ($nextPaymentDate->lessThan($today)) {
+                $nextPaymentDate->addDays(14);
+            }
+            break;
+
+        case 'monthly':
+            while ($nextPaymentDate->lessThan($today)) {
+                $nextPaymentDate->addMonth();
+            }
+            break;
+
+        default:
+            return null;
+    }
+
+    if ($this->loan_end_date) {
+        $loanEnd = Carbon::parse($this->loan_end_date, $timezone)->startOfDay();
+        if ($nextPaymentDate->greaterThan($loanEnd)) {
+            return null;
+        }
+    }
+
+    $daysToNext = $today->diffInDays($nextPaymentDate, false);
+
+    return $daysToNext >= 0 ? $daysToNext : null;
+}
+
+public function getDaysPastDueAttribute()
+{
+    if (!$this->loan_start_date || !$this->loan_payment_plan || $this->status !== 'approved') {
+        return null;
+    }
+
+    $startDate = Carbon::parse($this->loan_start_date)->startOfDay();
+    $today = Carbon::now('Africa/Dar_es_Salaam')->startOfDay();
+    $lastPaymentDate = $startDate->copy();
+
+    switch (strtolower($this->loan_payment_plan)) {
+        case 'weekly':
+            while ($lastPaymentDate->addDays(7)->lessThanOrEqualTo($today)) {}
+            $lastPaymentDate->subDays(7);
+            break;
+
+        case 'bi-weekly':
+            while ($lastPaymentDate->addDays(14)->lessThanOrEqualTo($today)) {}
+            $lastPaymentDate->subDays(14);
+            break;
+
+        case 'monthly':
+            while ($lastPaymentDate->addMonth()->lessThanOrEqualTo($today)) {}
+            $lastPaymentDate->subMonth();
+            break;
+
+        default:
+            return null;
+    }
+
+    if ($this->loan_end_date) {
+        $loanEnd = Carbon::parse($this->loan_end_date)->startOfDay();
+        if ($lastPaymentDate->greaterThan($loanEnd)) {
+            return null;
+        }
+    }
+
+    // Hesabu siku zilizopita tangu tarehe ya malipo
+    $daysLate = $lastPaymentDate->diffInDays($today, false);
+    return $daysLate > 0 ? $daysLate : null;
+}
+
+
+public function calculateDaysPastDue()
+{
+    if ($this->status !== 'approved' || !$this->loan_end_date) {
+        return null;
+    }
+
+    $totalPaid = $this->payments->sum('paid_amount');
+
+    if ($totalPaid >= $this->loan_required_amount) {
+        return 0; 
+    }
+
+    $today = Carbon::now()->startOfDay();
+    $loanEndDate = Carbon::parse($this->loan_end_date)->startOfDay();
+
+    if ($today->gt($loanEndDate)) {
+        return $today->diffInDays($loanEndDate); 
+    }
+
+    return 0; 
+}
+public function getDueDateAttribute()
     {
         return $this->calculateNextPaymentDate();
     }
@@ -86,7 +175,7 @@ class Loan extends Model
         $intervalsPassed = $intervalFn();
         $nextPayment = $startDate->copy()->add(
             $this->getPaymentInterval(),
-            $intervalsPassed + 1 // Add 1 interval to get the NEXT payment
+            $intervalsPassed + 1 
         );
 
         // Ensure next payment is within the loan period
@@ -103,10 +192,12 @@ class Loan extends Model
         };
     }
 
+  
     public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+{
+    return $this->belongsTo(User::class);
+}
+
 
     public function installation()
     {
@@ -143,6 +234,23 @@ class Loan extends Model
     {
         return $this->hasOne(PrivateGuarantor::class);
     }
+
+public function getDaysOverdueAttribute()
+{
+    $today = Carbon::today();
+
+    
+    $dueDate = $this->due_date instanceof Carbon ? $this->due_date : Carbon::parse($this->due_date);
+
+    if ($today->gt($dueDate)) {
+        
+        
+        return $dueDate->diffInDays($today);
+    }
+
+    return 0;
+}
+
 
     public function reminderLogs()
     {

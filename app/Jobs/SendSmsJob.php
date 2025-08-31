@@ -42,34 +42,50 @@ class SendSmsJob implements ShouldQueue
             }
 
             // Load loan if provided
-            $loan = $this->loanId ? Loan::with(['user', 'payments'])->find($this->loanId) : null;
-            if ($this->loanId && !$loan) {
-                Log::warning('Loan not found for SMS job', ['loan_id' => $this->loanId]);
-                return;
+            $loan = null;
+            if ($this->loanId) {
+                try {
+                    $loan = Loan::with(['user', 'payments'])->find($this->loanId);
+                    if (!$loan) {
+                        Log::warning('Loan not found for SMS job', ['loan_id' => $this->loanId]);
+                        return;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error loading loan: ' . $e->getMessage(), ['loan_id' => $this->loanId]);
+                    return;
+                }
             }
 
             // Resolve recipients
             $phoneNumbers = [];
             $userMap = [];
             foreach ($this->recipients as $recipient) {
-                $normalizedNumber = $this->convertPhoneNumberToInternationalFormat($recipient);
-                if ($this->isValidPhoneNumber($normalizedNumber)) {
-                    $phoneNumbers[] = $normalizedNumber;
-                    $userMap[$normalizedNumber] = null;
-                    continue;
-                }
-
-                if (is_numeric($recipient)) {
-                    $user = User::find($recipient);
-                    if ($user && $user->phone_number) {
-                        $normalizedNumber = $this->convertPhoneNumberToInternationalFormat($user->phone_number);
+                try {
+                    $normalizedNumber = $this->convertPhoneNumberToInternationalFormat($recipient);
+                    if ($this->isValidPhoneNumber($normalizedNumber)) {
                         $phoneNumbers[] = $normalizedNumber;
-                        $userMap[$normalizedNumber] = $user;
-                    } else {
-                        Log::warning('User not found or missing phone number', ['user_id' => $recipient]);
+                        $userMap[$normalizedNumber] = null;
+                        continue;
                     }
-                } else {
-                    Log::warning('Invalid recipient format', ['recipient' => $recipient]);
+
+                    if (is_numeric($recipient)) {
+                        $user = User::find($recipient);
+                        if ($user && $user->phone_number) {
+                            $normalizedNumber = $this->convertPhoneNumberToInternationalFormat($user->phone_number);
+                            if ($this->isValidPhoneNumber($normalizedNumber)) {
+                                $phoneNumbers[] = $normalizedNumber;
+                                $userMap[$normalizedNumber] = $user;
+                            } else {
+                                Log::warning('User phone number invalid', ['user_id' => $recipient, 'phone' => $user->phone_number]);
+                            }
+                        } else {
+                            Log::warning('User not found or missing phone number', ['user_id' => $recipient]);
+                        }
+                    } else {
+                        Log::warning('Invalid recipient format', ['recipient' => $recipient]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error processing recipient: ' . $e->getMessage(), ['recipient' => $recipient]);
                 }
             }
 
@@ -80,32 +96,38 @@ class SendSmsJob implements ShouldQueue
 
             // Send SMS
             if ($this->message) {
-                // Use provided custom message for bulk SMS
-                $response = Http::withHeaders([
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/x-www-form-urlencoded',
-                    'apiKey' => config('services.africastalking.api_key'),
-                ])->asForm()->post('https://api.africastalking.com/version1/messaging', [
-                            'username' => config('services.africastalking.username'),
-                            'to' => implode(',', $phoneNumbers),
-                            'from' => 'NK CNG',
-                            'message' => $this->message,
-                            'enqueue' => 1,
-                        ]);
+                try {
+                    $response = Http::withHeaders([
+                        'Accept' => 'application/json',
+                        'Content-Type' => 'application/x-www-form-urlencoded',
+                        'apiKey' => config('services.africastalking.api_key'),
+                    ])->timeout(10)->asForm()->post('https://api.africastalking.com/version1/messaging', [
+                        'username' => config('services.africastalking.username'),
+                        'to' => implode(',', $phoneNumbers),
+                        'from' => 'NK CNG',
+                        'message' => $this->message,
+                        'enqueue' => 1,
+                    ]);
 
-                if ($response->successful()) {
-                    Log::info('Bulk SMS sent successfully', ['recipients' => $phoneNumbers, 'loan_id' => $this->loanId]);
-                } else {
-                    Log::error('Bulk SMS API error', ['response' => $response->body(), 'loan_id' => $this->loanId]);
+                    if ($response->successful()) {
+                        Log::info('Bulk SMS sent successfully', ['recipients' => $phoneNumbers, 'loan_id' => $this->loanId]);
+                    } else {
+                        Log::error('Bulk SMS API error', ['response' => $response->body(), 'loan_id' => $this->loanId]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Bulk SMS sending failed: ' . $e->getMessage(), ['loan_id' => $this->loanId]);
                 }
             } elseif ($loan) {
-                // Individual messages for loan-specific content
                 $successCount = 0;
                 foreach ($phoneNumbers as $phoneNumber) {
                     $user = $userMap[$phoneNumber] ?? null;
-                    $finalMessage = $this->generateLoanMessage($loan, $user, $phoneNumber);
-                    if ($this->sendSingleSms($phoneNumber, $finalMessage)) {
-                        $successCount++;
+                    try {
+                        $finalMessage = $this->generateLoanMessage($loan, $user, $phoneNumber);
+                        if ($this->sendSingleSms($phoneNumber, $finalMessage)) {
+                            $successCount++;
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send SMS to ' . $phoneNumber . ': ' . $e->getMessage());
                     }
                 }
                 Log::info('SMS job completed', ['loan_id' => $this->loanId, 'success_count' => $successCount]);
@@ -122,13 +144,13 @@ class SendSmsJob implements ShouldQueue
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/x-www-form-urlencoded',
                 'apiKey' => config('services.africastalking.api_key'),
-            ])->asForm()->post('https://api.africastalking.com/version1/messaging', [
-                        'username' => config('services.africastalking.username'),
-                        'to' => $phoneNumber,
-                        'from' => 'NK CNG',
-                        'message' => $message,
-                        'enqueue' => 1,
-                    ]);
+            ])->timeout(10)->asForm()->post('https://api.africastalking.com/version1/messaging', [
+                'username' => config('services.africastalking.username'),
+                'to' => $phoneNumber,
+                'from' => 'NK CNG',
+                'message' => $message,
+                'enqueue' => 1,
+            ]);
 
             if ($response->successful()) {
                 Log::info('SMS sent successfully', ['to' => $phoneNumber, 'loan_id' => $this->loanId]);
@@ -149,11 +171,9 @@ class SendSmsJob implements ShouldQueue
         $nextDueDate = $this->calculateNextDueDate($loan);
 
         if ($loan->status === 'pending') {
-            // For pending loans, use loan_required_amount
             return "Habari {$name}, Loan #{$loan->id} application submitted! Amount: TZS {$loan->loan_required_amount}. Awaiting approval.";
         }
 
-        // For approved loans with payments
         $amount = $loan->payments->isNotEmpty() ? $loan->payments->last()->amount : $loan->loan_required_amount;
         return "Habari {$name}, Loan #{$loan->id} approved! Payment of TZS {$amount} is being processed. Next due: {$nextDueDate->format('d/m/Y')}.";
     }

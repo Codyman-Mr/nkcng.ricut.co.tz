@@ -34,21 +34,23 @@
                     <p class="text-2xl font-bold">{{ number_format($customers) }}</p>
                 </div>
             </div>
+{{-- 
+<div class="grid md:grid-cols-2 gap-6">
+    <div class=" h-80 overflow-y-auto bg-white p-6 rounded shadow">
+        <h3 class="text-lg font-bold mb-4">Installations by Cylinder Type</h3>
+        <ul class="space-y-2">
+            @foreach ($installations as $type => $group)
+                <li class="flex justify-between">
+                    <span>{{ $type }}</span>
+                    <span class="font-bold">{{ $group->count() }}</span>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+</div>
+--}}
 
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class=" h-80 overflow-y-auto bg-white p-6 rounded shadow">
-                    <h3 class="text-lg font-bold mb-4">Installations by Cylinder Type</h3>
-                    <ul class="space-y-2">
-                        @foreach ($installations as $type => $group)
-                            <li class="flex justify-between">
-                                <span>{{ $type }}</span>
-                                <span class="font-bold">{{ $group->count() }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-
-                <div class=" h-80 overflow-y-auto bg-white p-6 rounded shadow">
+               {{--  <div class=" h-80 overflow-y-auto bg-white p-6 rounded shadow">
                     <h3 class="text-lg font-bold mb-4">Payments by Method</h3>
                     <ul class="space-y-2">
                         @foreach ($paymentMethods as $method)
@@ -59,17 +61,17 @@
                         @endforeach
                     </ul>
                 </div>
-            </div>
+            </div>--}}
             <div class="flex row gap-4 mt-4 mx-1">
                 <div class=" bg-white p-6  rounded shadow">
                     <h3 class="text-lg font-bold mb-4">Loan Trends Over Time</h3>
                     <div wire:wire:ignore id="loan-trends-chart" style="height: 350px;"></div>
                 </div>
+<div class="bg-white p-3 rounded shadow max-w-sm">
+    <h3 class="text-md font-bold mb-2">Payments by Method</h3>
+    <div wire:ignore id="payment-methods-chart" style="height: 200px;"></div>
+</div>
 
-                <div class="bg-white p-6 rounded shadow">
-                    <h3 class="text-lg font-bold mb-4">Payments by Method</h3>
-                    <div wire:ignore id="payment-methods-chart" style="height: 350px;"></div>
-                </div>
 
                 <div class="bg-white p-6 rounded shadow">
                     <h3 class="text-lg font-bold mb-4">Installations by Cylinder Type</h3>
