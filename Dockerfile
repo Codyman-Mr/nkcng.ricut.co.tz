@@ -1,3 +1,4 @@
+# Base image
 FROM php:8.2-fpm
 
 # Install system dependencies
@@ -14,14 +15,12 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     npm \
     libpq-dev \
-    libicu-dev \      # required for intl
-    pkg-config         # required for intl
+    libicu-dev \
+    pkg-config \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath pdo_pgsql pgsql intl zip
-
-# Set environment variable to allow composer to run as root safely
-ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -33,7 +32,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
 
 # Install Node dependencies and build assets
 RUN npm install && npm run build
@@ -52,8 +51,14 @@ RUN chown -R www-data:www-data /var/www/html \
 EXPOSE 80 8080
 
 # Add worker command to supervisord.conf if not already added
-RUN echo "[program:loan_reminder]\ncommand=php /var/www/html/artisan loan:reminder\nautostart=true\nautorestart=true\nuser=www-data\nstdout_logfile=/var/www/html/storage/logs/loan_reminder.log\nstderr_logfile=/var/www/html/storage/logs/loan_reminder_err.log" \
-    >> /etc/supervisor/conf.d/supervisord.conf
+RUN echo "[program:loan_reminder]\n\
+command=php /var/www/html/artisan loan:reminder\n\
+autostart=true\n\
+autorestart=true\n\
+user=www-data\n\
+stdout_logfile=/var/www/html/storage/logs/loan_reminder.log\n\
+stderr_logfile=/var/www/html/storage/logs/loan_reminder_err.log" \
+>> /etc/supervisor/conf.d/supervisord.conf
 
 # Start Supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
