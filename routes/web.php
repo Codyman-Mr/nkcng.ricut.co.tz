@@ -34,6 +34,17 @@ Route::get('/test-log', function () {
     return 'Error logged!';
 });
 
+Route::get('/debug-error', function () {
+    try {
+        // Jaribu chama ambalo linasababisha error, kama DB example:
+        auth()->user(); // Kama haufanyi login, hii inakosa
+        return 'No error detected';
+    } catch (\Throwable $e) {
+        return '<pre style="white-space: pre-wrap;">' . $e->__toString() . '</pre>';
+    }
+});
+
+
 Route::post('/send-reminder', [Controller::class, 'sendMessage'])->middleware('auth');
 
 Route::get('/registration', [AuthController::class, 'registrationPage'])->middleware('guest');
