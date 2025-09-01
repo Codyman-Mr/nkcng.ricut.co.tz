@@ -1,6 +1,5 @@
 FROM php:8.2-fpm
 
-
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
@@ -46,6 +45,10 @@ RUN chown -R www-data:www-data /var/www/html \
 
 # Expose ports
 EXPOSE 80 8080
+
+# Add worker command to supervisord.conf if not already added
+RUN echo "[program:loan_reminder]\ncommand=php /var/www/html/artisan loan:reminder\nautostart=true\nautorestart=true\nuser=www-data\nstdout_logfile=/var/www/html/storage/logs/loan_reminder.log\nstderr_logfile=/var/www/html/storage/logs/loan_reminder_err.log" \
+    >> /etc/supervisor/conf.d/supervisord.conf
 
 # Start Supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
