@@ -12,11 +12,15 @@ RUN apt-get update && apt-get install -y \
     nginx \
     supervisor \
     nodejs \
-    npm\
-    libpq-dev
+    npm \
+    libpq-dev \
+    libicu-dev   # required for intl extension
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath pdo_pgsql pgsql intl zip
+
+# Set environment variable to allow composer to run as root safely
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
