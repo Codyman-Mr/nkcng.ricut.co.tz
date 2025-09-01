@@ -1,21 +1,38 @@
-/.phpunit.cache
+# Laravel specific
+/vendor
 /node_modules
 /public/hot
 /public/storage
 /storage/*.key
-/vendor
+
+# Allow logs folder and its .gitignore
+/storage/*
+!/storage/.gitignore
+!/storage/logs
+!/storage/logs/.gitignore
+
+# Environment files
 .env
 .env.local
 .env.backup
 .env.production
-.phpactor.json
+
+# PHPUnit
+/.phpunit.cache
 .phpunit.result.cache
-Homestead.json
-Homestead.yaml
-auth.json
-npm-debug.log
-yarn-error.log
+
+# IDEs & Editor junk
 /.fleet
 /.idea
 /.vscode
+/.phpactor.json
 /.file
+
+# Homestead
+Homestead.json
+Homestead.yaml
+
+# Debug logs
+npm-debug.log
+yarn-error.log
+auth.json
