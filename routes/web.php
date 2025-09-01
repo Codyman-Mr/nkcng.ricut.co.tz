@@ -13,6 +13,8 @@ use PhpParser\Node\Expr\Assign;
 use App\Http\Controllers\GpsDeviceController;
 use App\Http\Controllers\InstallationController;
 use App\Livewire\PaymentHistoryComponent;
+use Illuminate\Support\Facades\Log;
+
 
 Route::post('/loan-submit', [AuthController::class, 'submitLoan'])->name('loan.submit');
 
@@ -26,6 +28,10 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('/debug-error', function () {
     return nl2br(file_get_contents(storage_path('logs/laravel.log')));
+});
+Route::get('/test-log', function () {
+    Log::error('Test error logged at ' . now());
+    return 'Error logged!';
 });
 
 Route::post('/send-reminder', [Controller::class, 'sendMessage'])->middleware('auth');
