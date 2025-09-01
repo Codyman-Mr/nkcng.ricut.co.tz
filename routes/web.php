@@ -24,6 +24,10 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/change-password', [PasswordController::class, 'update'])->name('password.update');
 });
 
+Route::get('/debug-error', function () {
+    return nl2br(file_get_contents(storage_path('logs/laravel.log')));
+});
+
 Route::post('/send-reminder', [Controller::class, 'sendMessage'])->middleware('auth');
 
 Route::get('/registration', [AuthController::class, 'registrationPage'])->middleware('guest');
