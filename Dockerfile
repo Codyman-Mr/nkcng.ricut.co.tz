@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     npm \
     libpq-dev \
-    libicu-dev   # required for intl extension
+    libicu-dev \      # required for intl
+    pkg-config         # required for intl
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath pdo_pgsql pgsql intl zip
