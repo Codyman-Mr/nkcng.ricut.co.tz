@@ -15,6 +15,19 @@ use App\Http\Controllers\InstallationController;
 use App\Livewire\PaymentHistoryComponent;
 use Illuminate\Support\Facades\Log;
 
+use Illuminate\Support\Facades\Log;
+
+Route::get('/test-error', function () {
+    try {
+        // Trigger some error
+        $data = 1 / 0;
+
+        return 'Success!';
+    } catch (\Throwable $e) {
+        Log::error('❌ Caught Error: ' . $e->getMessage());
+        return response()->view('errors.custom', [], 500); // You can return a custom view
+    }
+});
 
 Route::post('/loan-submit', [AuthController::class, 'submitLoan'])->name('loan.submit');
 
