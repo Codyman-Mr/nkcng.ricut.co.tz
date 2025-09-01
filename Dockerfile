@@ -1,5 +1,4 @@
-# Base image
-FROM php:8.2-fpm
+FROM php:8.3-fpm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -48,9 +47,6 @@ COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage
 
-# Expose ports
-EXPOSE 80 8080
-
 # Add worker command to supervisord.conf if not already added
 RUN echo "[program:loan_reminder]\n\
 command=php /var/www/html/artisan loan:reminder\n\
@@ -60,6 +56,9 @@ user=www-data\n\
 stdout_logfile=/var/www/html/storage/logs/loan_reminder.log\n\
 stderr_logfile=/var/www/html/storage/logs/loan_reminder_err.log" \
 >> /etc/supervisor/conf.d/supervisord.conf
+
+# Expose ports
+EXPOSE 80 8080
 
 # Start Supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
