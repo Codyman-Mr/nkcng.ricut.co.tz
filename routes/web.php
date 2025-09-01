@@ -15,8 +15,6 @@ use App\Http\Controllers\InstallationController;
 use App\Livewire\PaymentHistoryComponent;
 use Illuminate\Support\Facades\Log;
 
-use Illuminate\Support\Facades\Log;
-
 Route::get('/test-error', function () {
     try {
         // Trigger some error
