@@ -38,9 +38,9 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader -
 # Install Node dependencies and build assets
 RUN npm install && npm run build
 
-# Set permissions
+# Set correct permissions
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Copy Nginx configuration
 COPY ./nginx.conf /etc/nginx/sites-available/default
@@ -52,8 +52,8 @@ COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN echo "[program:loan_reminder]\ncommand=php /var/www/html/artisan loan:reminder\nautostart=true\nautorestart=true\nuser=www-data\nstdout_logfile=/var/www/html/storage/logs/loan_reminder.log\nstderr_logfile=/var/www/html/storage/logs/loan_reminder_err.log" \
     >> /etc/supervisor/conf.d/supervisord.conf
 
-# Expose HTTP port
+# Expose HTTP port (Nginx)
 EXPOSE 80
 
-# Start Supervisor (runs PHP-FPM, Nginx, and worker)
+# Start Supervisor (this runs Nginx + PHP-FPM + Laravel worker)
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
